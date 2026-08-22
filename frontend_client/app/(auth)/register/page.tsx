@@ -31,33 +31,22 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme } = useUIStore();
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-
-  // Lưu thông tin đăng ký để phục vụ bước OTP
-  const [registeredEmail, setRegisteredEmail] = useState<string>("");
-
+  
   // Tự động nhận email và step từ URL (ví dụ: /register?email=...&step=2)
   const emailParam = searchParams.get("email");
   const stepParam = searchParams.get("step");
+  const [currentStep, setCurrentStep] = useState<1 | 2>(stepParam === "2" ? 2 : 1);
 
-  useEffect(() => {
-    if (emailParam) {
-      setRegisteredEmail(emailParam);
-    }
-    if (stepParam === "2") {
-      setCurrentStep(2);
-      setCountdown(120);
-      setCanResend(false);
-    }
-  }, [emailParam, stepParam]);
-
+  // Lưu thông tin đăng ký để phục vụ bước OTP
+  const [registeredEmail, setRegisteredEmail] = useState<string>(emailParam || "");
+  
   // Quản lý mật khẩu ẩn/hiện
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Đếm ngược gửi lại OTP (120s)
   const [countdown, setCountdown] = useState(120);
-  const [canResend, setCanResend] = useState(false);
+  const canResend = countdown === 0;
 
   // React Query Mutations
   const registerMutation = useRegister();
@@ -97,14 +86,12 @@ function RegisterForm() {
 
   // Hiệu ứng đếm ngược thời gian gửi lại OTP ở Bước 2
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (currentStep === 2 && countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    } else if (countdown === 0) {
-      setCanResend(true);
-    }
+    if (currentStep !== 2 || countdown <= 0) return;
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+
     return () => clearInterval(timer);
   }, [currentStep, countdown]);
 
@@ -120,7 +107,6 @@ function RegisterForm() {
 
       setRegisteredEmail(data.email);
       setCountdown(120);
-      setCanResend(false);
       resetOtp();
       setCurrentStep(2); // Chuyển sang bước 2: Xác thực OTP
     } catch (error: any) {
@@ -146,7 +132,6 @@ function RegisterForm() {
     try {
       await sendOtpMutation.mutateAsync(registeredEmail);
       setCountdown(120);
-      setCanResend(false);
     } catch (error: any) {}
   };
 
