@@ -9,7 +9,9 @@ import {
     logoutController,
     forgotPasswordController,
     resetPasswordController,
-    changePasswordController
+    changePasswordController,
+    loginWithGoogle,
+    loginWithFaceBook
 } from "../controllers/authController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { validate } from "../middlewares/validate.js";
@@ -21,7 +23,8 @@ import {
     refreshTokenSchema,
     forgotPasswordSchema,
     resetPasswordSchema,
-    changePasswordSchema
+    changePasswordSchema,
+    googleLoginSchema
 } from "../validators/authZod.js";
 
 const authRouter = express.Router();
@@ -407,4 +410,6 @@ authRouter.post("/reset-password", validate(resetPasswordSchema), resetPasswordC
  */
 authRouter.put("/change-password", verifyToken, validate(changePasswordSchema), changePasswordController);
 
+authRouter.post("/google", validate(googleLoginSchema), loginWithGoogle);
+authRouter.post("/facebook", validate(), loginWithFaceBook);
 export default authRouter;

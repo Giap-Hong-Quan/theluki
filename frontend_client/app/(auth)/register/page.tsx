@@ -24,7 +24,7 @@ import {
   useRegister,
   useVerifyOtp,
   useSendOtp,
-} from "@/hooks/auth/useAuth";
+} from "@/hooks/useAuth";
 import { useUIStore } from "@/stores/uiStore";
 
 function RegisterForm() {

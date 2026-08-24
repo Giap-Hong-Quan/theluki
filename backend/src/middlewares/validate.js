@@ -9,14 +9,22 @@ export const validate = (schema) => (req, res, next) => {
             query: req.query,
         });
         if (parsed.body) req.body = parsed.body;
-        if (parsed.query) req.query = parsed.query;
-        if (parsed.params) req.params = parsed.params;
+        if (parsed.query) {
+            Object.assign(req.query, parsed.query);
+        }
+        if (parsed.params) {
+            Object.assign(req.params, parsed.params);
+        }
 
         next();
     } catch (error) {
-        // Lấy thông điệp lỗi đầu tiên từ Zod
-        const firstErrorMessage = error.issues?.[0]?.message || "Dữ liệu không hợp lệ";
-        // Đẩy lỗi sang cho errorHandle middleware xử lý
-        next(new ApiError(400, firstErrorMessage));
+        if (error?.issues?.length || error?.errors?.length) {
+            const firstErrorMessage =
+                error.issues?.[0]?.message ||
+                error.errors?.[0]?.message ||
+                "Dữ liệu không hợp lệ";
+            return next(new ApiError(400, firstErrorMessage));
+        }
+        next(error);
     }
 };

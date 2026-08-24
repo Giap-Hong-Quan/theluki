@@ -31,6 +31,30 @@ export const authService = {
   verifyOtp: (email: string, otp: string): Promise<RegisterResponse> => {
     return axiosClient.post(API_ENDPOINTS.AUTH.VERIFY_OTP, { email, otp });
   },
+
+  // Đăng nhập Google
+  googleLogin: (token: string): Promise<LoginResponse> => {
+    return axiosClient.post(API_ENDPOINTS.AUTH.GOOGLE, { token });
+  },
+
+  // Đăng nhập Facebook
+  facebookLogin: (token: string): Promise<LoginResponse> => {
+    return axiosClient.post(API_ENDPOINTS.AUTH.FACEBOOK, { token });
+  },
+
+  // Quên mật khẩu - Gửi OTP
+  forgotPassword: (email: string): Promise<{ message?: string; success?: boolean }> => {
+    return axiosClient.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
+  },
+
+  // Đặt lại mật khẩu mới bằng OTP
+  resetPassword: (payload: {
+    email: string;
+    otp: string;
+    newPassword: string;
+  }): Promise<{ message?: string; success?: boolean }> => {
+    return axiosClient.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, payload);
+  },
 };
 
 export default authService;

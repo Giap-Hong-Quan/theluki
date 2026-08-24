@@ -13,7 +13,7 @@ const VerificationSchema =new mongoose.Schema(
         },
         type:{
             type:String,
-            enum:["verify_email","reset_password"],
+            enum:["verify_email","reset_password","forgot_password"],
             required: true,
         },
          expiresAt: {

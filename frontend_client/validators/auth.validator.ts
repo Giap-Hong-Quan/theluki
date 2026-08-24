@@ -59,3 +59,56 @@ export const verifyOtpSchema = z.object({
 
 export type VerifyOtpFormData = z.infer<typeof verifyOtpSchema>;
 
+// Schema Quên mật khẩu (Bước 1)
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập email")
+    .email("Email không đúng định dạng"),
+});
+
+export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+
+// Schema Đặt lại mật khẩu mới (Bước 2 hoặc 3)
+export const resetPasswordSchema = z
+  .object({
+    otp: z
+      .string()
+      .trim()
+      .min(6, "Mã OTP gồm 6 chữ số")
+      .max(6, "Mã OTP gồm 6 chữ số")
+      .regex(/^\d+$/, "Mã OTP chỉ bao gồm chữ số"),
+    newPassword: z
+      .string()
+      .min(1, "Vui lòng nhập mật khẩu mới")
+      .min(6, "Mật khẩu phải từ 6 ký tự trở lên"),
+    confirmPassword: z
+      .string()
+      .min(1, "Vui lòng nhập lại mật khẩu"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["confirmPassword"],
+  });
+
+export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+
+// Schema Mật khẩu mới (Bước 3: Chỉ nhập mật khẩu)
+export const newPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(1, "Vui lòng nhập mật khẩu mới")
+      .min(6, "Mật khẩu phải từ 6 ký tự trở lên"),
+    confirmPassword: z
+      .string()
+      .min(1, "Vui lòng nhập lại mật khẩu"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["confirmPassword"],
+  });
+
+export type NewPasswordFormData = z.infer<typeof newPasswordSchema>;
+

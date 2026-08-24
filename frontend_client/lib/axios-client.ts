@@ -2,6 +2,12 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
+// Hàm lấy token từ Cookie
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+  return match ? decodeURIComponent(match[2]) : null;
+}
 
 // Khởi tạo Axios Instance cơ bản
 export const axiosClient: AxiosInstance = axios.create({
@@ -13,14 +19,12 @@ export const axiosClient: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
-// Request Interceptor: Gắn Access Token (nếu có) vào Header mỗi khi gọi API
+// Request Interceptor: Gắn Access Token từ Cookie vào Header Authorization
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("accessToken");
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    const token = getCookie("accessToken");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },

@@ -9,8 +9,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2, Check } from "lucide-react";
 import toast from "react-hot-toast";
 import { loginSchema, LoginFormData } from "@/validators/auth.validator";
-import { useLogin } from "@/hooks/auth/useAuth";
+import { useLogin, useGoogleAuth } from "@/hooks/useAuth";
 import { authService } from "@/services/authService";
+import { useGoogleLogin } from "@react-oauth/google";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,13 +36,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
-      const res = await loginMutation.mutateAsync(data);
-      if (res?.data?.accessToken) {
-        localStorage.setItem("accessToken", res.data.accessToken);
-      }
-
-      toast.success(res?.message || "Đăng nhập thành công!");
-      router.push("/");
+      await loginMutation.mutateAsync(data);
     } catch (error: any) {
       // Kiểm tra đơn giản qua thông báo lỗi chưa xác minh OTP
       if (
@@ -60,7 +55,17 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+  const googleAuthMutation = useGoogleAuth();
 
+  // Xử lý đăng nhập Google
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      googleAuthMutation.mutate(tokenResponse.access_token);
+    },
+    onError: () => {
+      toast.error("Đăng nhập Google thất bại!");
+    },
+  });
   return (
     <div className="w-full bg-card border border-line p-8 sm:p-10 shadow-box rounded-none transition-colors duration-200">
       {/* 1. Header / Logo Branding */}
@@ -89,9 +94,15 @@ export default function LoginPage() {
         {/* Google Button */}
         <button
           type="button"
-          className="h-11 px-4 border border-line bg-input hover:border-line-dark text-primary transition-colors flex items-center justify-center gap-2 text-xs font-semibold rounded-none"
+          onClick={() => handleGoogleLogin()}
+          disabled={googleAuthMutation.isPending}
+          className="h-11 px-4 border border-line bg-input hover:border-line-dark text-primary transition-colors flex items-center justify-center gap-2 text-xs font-semibold rounded-none cursor-pointer disabled:opacity-50"
         >
-          <Image src="/gg.svg" alt="Google" width={20} height={20} className="w-5 h-5 object-contain" />
+          {googleAuthMutation.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          ) : (
+            <Image src="/gg.svg" alt="Google" width={20} height={20} className="w-5 h-5 object-contain" />
+          )}
           <span>Google</span>
         </button>
       </div>

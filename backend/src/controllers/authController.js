@@ -10,6 +10,7 @@ import Role from "../models/Role.js";
 import ApiError from "../exceptions/ApiError.js";
 import { success } from "../utils/success.js";
 import { comparePassword, hashPassword } from "../utils/password.js";
+import axios from "axios";
 
 // đăng ký
 export const signupController = async (req, res, next) => {
@@ -248,6 +249,105 @@ export const changePasswordController = async (req, res, next) => {
         await user.save();
 
         return success(res, null, "Đổi mật khẩu thành công", 200);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Login Google
+export const loginWithGoogle = async (req, res, next) => {
+    try {
+        const { token } = req.body;
+
+        // 1. Gọi Google UserInfo API để xác thực Token và lấy thông tin
+        let googleUser;
+        try {
+            const response = await axios.get("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            googleUser = response.data;
+        } catch (err) {
+            throw new ApiError(400, "Google Token không hợp lệ hoặc đã hết hạn!");
+        }
+
+        const { sub: googleId, email, name, picture, email_verified } = googleUser;
+
+        if (!email) {
+            throw new ApiError(400, "Không tìm thấy email từ tài khoản Google này!");
+        }
+
+        // 2. Tìm user trong cơ sở dữ liệu
+        let user = await User.findOne({ email: email.toLowerCase().trim() }).populate("role");
+
+        if (!user) {
+            // Lấy role "user" mặc định
+            const userRole = await Role.findOne({ name: "user" }).select("name _id");
+            if (!userRole) {
+                throw new ApiError(500, "Role 'user' không tồn tại trong hệ thống");
+            }
+
+            // Tạo tài khoản mới cho người dùng Google
+            user = await User.create({
+                full_name: name || "Google User",
+                email: email.toLowerCase().trim(),
+                avatar: picture || null,
+                provider: "google",
+                provider_id: googleId,
+                isOTPEmail: true, // Email Google đã được xác thực tự động
+                isActive: true,
+                isOnline: true,
+                lastLogin: new Date(),
+                role: userRole._id,
+            });
+            user = await user.populate("role");
+        } else {
+            // Kiểm tra trạng thái tài khoản
+            if (user.isActive === false) {
+                throw new ApiError(403, "Tài khoản của bạn đã bị khóa hoặc bị vô hiệu hóa");
+            }
+
+            // Cập nhật provider_id và avatar nếu có
+            if (!user.provider_id) user.provider_id = googleId;
+            if (!user.avatar && picture) user.avatar = picture;
+            user.isOTPEmail = true; // Đảm bảo email được đánh dấu đã xác thực
+            user.isOnline = true;
+            user.lastLogin = new Date();
+            await user.save();
+        }
+
+        // 3. Tạo JWT Access Token & Refresh Token
+        const roleName = user.role?.name || "user";
+        const newAccessToken = accessToken({
+            id: user._id,
+            date: new Date(),
+            role: roleName,
+        });
+
+        const newRefreshToken = refreshToken({
+            id: user._id,
+            date: new Date(),
+            role: roleName,
+        });
+
+        // 4. Lưu Refresh Token vào HTTP-only Cookie
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày
+        });
+
+        return success(res, { accessToken: newAccessToken }, "Đăng nhập Google thành công", 200);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Login FaceBook
+export const loginWithFaceBook = async (req, res, next) => {
+    try {
+        const { token } = req.body;
+        
     } catch (error) {
         next(error);
     }

@@ -99,3 +99,9 @@ export const changePasswordSchema = z.object({
       .min(6, "Mật khẩu mới phải ít nhất 6 ký tự"),
   }),
 });
+
+export const googleLoginSchema = z.object({
+  body: z.object({
+    token: z.string({ required_error: "Google Token là bắt buộc" }).min(1, "Google Token không được để trống"),
+  }),
+});
