@@ -1,94 +1,142 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Lock, Mail, Eye, EyeOff, ShieldCheck, Loader2 } from "lucide-react";
+import { authService } from "../../service/auth";
 
-import CarouselImage from "../../components/auth/CarouselImage"
-import { Link, useNavigate } from "react-router-dom"
-import Formsignin from "../../components/auth/Formsignin"
-import { loginWithGoogle } from "../../service/auth"
+export default function SigninPage() {
+  const navigate = useNavigate();
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-const SigninPage = () => {
-  const navigate=useNavigate()
-  const handleLoginGG=async ()=>{
-    try {
-      const data= await loginWithGoogle();
-      console.log("Access Token:", data.data.token);
-      if(data){
-        navigate("/");
-      }
-    } catch (error) {
-       console.error(error);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+
+    if (!email.trim() || !password.trim()) {
+      setErrorMsg("Vui lòng điền đầy đủ email và mật khẩu.");
+      return;
     }
-  }
-  return (
-    // container
-    <div className="w-full h-full ">
-        {/* top */}
-        <div className="flex w-full ">
-            {/* left */}
-            <div className=" w-1/3">
-              <CarouselImage/>
-            </div>
-            {/* right */}
-            <div className=" w-2/3 flex items-center flex-col pt-16">
-              <div className="text-center flex flex-col gap-4">
-                <h1 className="text-5xl font-bold">HOAN</h1>
-                <p className="text-2xl font-bold" >Welcome to HOAN</p>
-                <p className=" mb-5">Đăng nhập ngay để có trải nghiệm mua sắm tuyệt vời cùng chúng tôi.</p>
-                {/* login fb gg */}
-                <div className="flex flex-col gap-7">
-                  <p className="font-bold">Đăng nhập nhanh với</p>
-                  <div className="flex items-center justify-center gap-16">
-                    <button onClick={()=>handleLoginGG()} className="w-12 h-12">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1024px-Facebook_Logo_%282019%29.png" alt="FB" />
-                    </button>
-                    <button className="w-12 h-12">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png" alt="GG" />
-                    </button>
-                  </div>
-                  <p className="font-bold">Hoặc</p>
-                </div>
-                {/* login form */}
-                <div className="w-full">
-               <Formsignin/>
-                </div>
-              </div>
-              <p className="mt-8">Bạn chưa có tài khoản? <Link to='/signup' className="text-blue-700 underline">Đăng ký ngay</Link></p>
-            </div>
-        </div>
-        {/* bottom */}
-        <div className="px-16 py-10">
-          <div className="grid grid-cols-4 gap-4">
-              <div className="flex flex-col gap-2">
-                  <h1 className="text-4xl font-bold">HOAN</h1>
-                  <p>Đông Hưng Thuận,Quận 12 ,TP Hồ Chí Minh</p>
-                  <p><strong>Email:</strong>giaphongquan2407@gmail.com</p>
-                  <p><strong>Hotline CSKH:</strong>0335906807</p>
-                  <p><strong>Hotline Tư vấn:</strong>0335906807</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="font-bold text-base">Về HOAN</p>
-                <p>Giới thiệu</p>
-                <p>Tuyển dụng và việc làm </p>
-                <p>Blog</p>
-                <p>FAQ</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="font-bold text-base">Chính sách khách hàng</p>
-                <p>Chính sách khách hàng</p>
-                <p>Chính sách bảo mật </p>
-                <p>Chính sách Menbership</p>
-                <p>Chính sách quốc tế</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <p className="font-bold text-base">Hệ thống chánh</p>
-                <p>HOAN Bình Đinh</p>
-                <p>HOAN Bạc Liêu</p>
-                <p>HOAN Thủ Đức</p>
-                <p>HOAN Hà Nội</p>
-              </div>
-          </div>
-        </div>
-    </div>
-  )
-}
 
-export default SigninPage
+    try {
+      setLoading(true);
+      await authService.loginAdmin({ email: email.trim(), password });
+      navigate("/");
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.";
+      setErrorMsg(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen w-screen flex items-center justify-center bg-zinc-950 text-zinc-100 px-4 py-8">
+      {/* Background Subtle Gradient Glow */}
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-800/20 via-zinc-950 to-zinc-950"></div>
+
+      <div className="relative w-full max-w-md bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 p-8 sm:p-10 rounded-3xl shadow-2xl space-y-8">
+        {/* Header Branding */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-800 border border-zinc-700 text-white mb-2 shadow-inner">
+            <ShieldCheck className="w-6 h-6 text-zinc-300" />
+          </div>
+          <h1 className="text-2xl font-black tracking-[0.2em] uppercase font-mono text-white">
+            THE LUKI
+          </h1>
+          <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">
+            Cổng Quản Trị Hệ Thống
+          </p>
+        </div>
+
+        {/* Error Alert */}
+        {errorMsg && (
+          <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium animate-in fade-in duration-200">
+            {errorMsg}
+          </div>
+        )}
+
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Email Field */}
+          <div className="space-y-1.5 text-left">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+              Email Quản Trị
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-3.5 flex items-center text-zinc-500">
+                <Mail className="w-4 h-4" />
+              </span>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@theluki.vn"
+                className="w-full h-11 pl-10 pr-4 bg-zinc-800/60 border border-zinc-700/80 rounded-xl text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Password Field */}
+          <div className="space-y-1.5 text-left">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+              Mật Khẩu
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-3.5 flex items-center text-zinc-500">
+                <Lock className="w-4 h-4" />
+              </span>
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full h-11 pl-10 pr-10 bg-zinc-800/60 border border-zinc-700/80 rounded-xl text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-3.5 flex items-center text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-11 bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50 active:scale-[0.98]"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Đang xác thực...</span>
+              </>
+            ) : (
+              <span>ĐĂNG NHẬP ADMIN</span>
+            )}
+          </button>
+        </form>
+
+        {/* Footer Note */}
+        <p className="text-center text-[11px] text-zinc-500">
+          Chỉ dành riêng cho Quản trị viên và Nhân viên có thẩm quyền.
+        </p>
+      </div>
+    </div>
+  );
+}

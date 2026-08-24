@@ -1,12 +1,36 @@
-import axios from"axios"
+import axios from "axios";
+
 export const apiClient = axios.create({
-baseURL: "http://localhost:8000/v1/api",
+  baseURL: "http://localhost:8000/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: true,
 });
 
-// apiClient.interceptors.request.use((config)=>{
-//     const token = localStorage.getItem("");
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
-//   }
-//   return config;
-// })
+// Request Interceptor: Tự động đính kèm Token quản trị
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("admin_token") || localStorage.getItem("astkn");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response Interceptor: Xử lý lỗi 401 tự động logout
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("admin_token");
+      localStorage.removeItem("astkn");
+      if (window.location.pathname !== "/signin") {
+        window.location.href = "/signin";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
