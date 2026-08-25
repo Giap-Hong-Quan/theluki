@@ -35,7 +35,7 @@ export default function RootLayout({
           <ThemePullCord />
 
           <Toaster
-            position="top-right"
+            position="top-center"
             toastOptions={{ duration: 3000 }}
           />
 

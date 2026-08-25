@@ -18,6 +18,7 @@ import {
 import { useLogout } from "@/hooks/useAuth";
 import { useCollections } from "@/hooks/useCollection";
 import SearchDrawer from "./SearchDrawer";
+import CapybaraLoader from "@/src/components/common/CapybaraLoader";
 
 interface DecodedToken {
   id?: string;
@@ -91,6 +92,16 @@ export default function Header() {
 
   return (
     <>
+      {/* Overlay loader khi đang xử lý đăng xuất */}
+      {logoutMutation.isPending && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md transition-all duration-300">
+          <CapybaraLoader />
+          <p className="mt-4 text-sm font-semibold tracking-widest text-white uppercase animate-pulse">
+            Đang đăng xuất...
+          </p>
+        </div>
+      )}
+
       <header className="sticky top-0 z-40 w-full bg-page/95 backdrop-blur-md border-b border-line transition-colors duration-200">
         {/* Container rộng thoáng, padding 2 bên cân đối */}
         <div className="max-w-[1550px] mx-auto px-4 sm:px-8 lg:px-12">
