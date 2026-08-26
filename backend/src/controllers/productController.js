@@ -122,14 +122,32 @@ export const getAllProductsController = async (req, res, next) => {
             query.isActive = true;
         }
 
-        // Lọc theo Danh mục
-        if (category && mongoose.Types.ObjectId.isValid(category)) {
-            query.category = new mongoose.Types.ObjectId(category);
+        // Lọc theo Danh mục (Hỗ trợ ObjectId hoặc Slug)
+        if (category && category.trim() !== "") {
+            if (mongoose.Types.ObjectId.isValid(category)) {
+                query.category = new mongoose.Types.ObjectId(category);
+            } else {
+                const catDoc = await Category.findOne({ slug: category.trim(), deletedAt: null });
+                if (catDoc) {
+                    query.category = catDoc._id;
+                } else {
+                    query.category = new mongoose.Types.ObjectId();
+                }
+            }
         }
 
-        // Lọc theo Bộ sưu tập
-        if (collection && mongoose.Types.ObjectId.isValid(collection)) {
-            query.collections = new mongoose.Types.ObjectId(collection);
+        // Lọc theo Bộ sưu tập (Hỗ trợ ObjectId hoặc Slug)
+        if (collection && collection.trim() !== "") {
+            if (mongoose.Types.ObjectId.isValid(collection)) {
+                query.collections = new mongoose.Types.ObjectId(collection);
+            } else {
+                const colDoc = await Collection.findOne({ slug: collection.trim(), deletedAt: null });
+                if (colDoc) {
+                    query.collections = colDoc._id;
+                } else {
+                    query.collections = new mongoose.Types.ObjectId();
+                }
+            }
         }
 
         // Lọc sản phẩm nổi bật

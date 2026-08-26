@@ -10,7 +10,7 @@ export default function ShopLayout({
   return (
     <div className="min-h-screen flex flex-col bg-page text-primary transition-colors duration-200">
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 px-5">{children}</main>
       <Footer />
     </div>
   );

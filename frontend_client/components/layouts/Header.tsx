@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useLogout } from "@/hooks/useAuth";
 import { useCollections } from "@/hooks/useCollection";
+import { useCategories } from "@/hooks/useCategory";
 import SearchDrawer from "./SearchDrawer";
 import CapybaraLoader from "@/src/components/common/CapybaraLoader";
 
@@ -27,6 +28,14 @@ interface DecodedToken {
   email?: string;
 }
 
+// Danh sách các trang trong menu Giới thiệu
+const INTRODUCE_LINKS = [
+  { href: "/introduce/about-us", title: "About us" },
+  { href: "/introduce/membership", title: "menbership" },
+  { href: "/introduce/recruitment", title: "Tuyển dụng" },
+  { href: "/introduce/faq", title: "faq" },
+];
+
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
@@ -36,6 +45,13 @@ export default function Header() {
   const { data: collections = [], isLoading: isCollectionsLoading } = useCollections({
     isActive: true,
     isDeleted: false,
+  });
+
+  // Lấy danh sách danh mục sản phẩm từ Backend
+  const { data: categories = [], isLoading: isCategoriesLoading } = useCategories({
+    isActive: true,
+    isDeleted: false,
+    sizePage: 0,
   });
 
   // State
@@ -130,12 +146,12 @@ export default function Header() {
             </div>
 
             {/* ================= 2. GIỮA: NAVIGATION MENU (DESKTOP) ================= */}
-            <nav className="hidden lg:flex items-center space-x-8 text-sm tracking-wide">
+            <nav className="hidden lg:flex items-center space-x-9 text-[15px] tracking-wide">
               {/* Trang chủ */}
               <Link
                 href="/"
-                className={`font-medium transition-colors hover:text-primary ${
-                  pathname === "/" ? "text-primary font-semibold" : "text-secondary"
+                className={`font-semibold transition-colors hover:text-primary ${
+                  pathname === "/" ? "text-primary font-bold" : "text-secondary"
                 }`}
               >
                 Trang chủ
@@ -147,38 +163,47 @@ export default function Header() {
                 onMouseEnter={() => setActiveDropdown("collections")}
                 onMouseLeave={() => setActiveDropdown(null)}
               >
-                <button
-                  type="button"
-                  className="flex items-center gap-1 font-medium text-secondary hover:text-primary transition-colors cursor-pointer"
+                <Link
+                  href="/collection"
+                  className={`flex items-center gap-1.5 font-semibold hover:text-primary transition-colors cursor-pointer ${
+                    pathname.startsWith("/collection") ? "text-primary font-bold" : "text-secondary"
+                  }`}
                 >
                   <span>Collections</span>
-                  <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180" />
-                </button>
+                  <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />
+                </Link>
 
                 <div
-                  className={`absolute left-0 top-full -mt-2 w-56 bg-card border border-line shadow-box p-3 space-y-1 transition-all duration-200 ${
+                  className={`absolute left-0 top-full -mt-2 w-64 bg-card border border-line shadow-xl divide-y divide-line transition-all duration-200 ${
                     activeDropdown === "collections"
                       ? "opacity-100 visible translate-y-0"
                       : "opacity-0 invisible -translate-y-2 pointer-events-none"
                   }`}
                 >
+                  <Link
+                    href="/collection"
+                    className="block px-5 py-3.5 text-sm font-medium uppercase tracking-wider text-primary hover:bg-input transition-colors truncate"
+                  >
+                    Tất cả
+                  </Link>
+
                   {isCollectionsLoading ? (
-                    <div className="py-2 px-3 space-y-2">
-                      <div className="h-3.5 bg-line animate-pulse rounded-none"></div>
-                      <div className="h-3.5 bg-line animate-pulse rounded-none w-3/4"></div>
+                    <div className="py-3.5 px-5 space-y-3">
+                      <div className="h-4 bg-line animate-pulse"></div>
+                      <div className="h-4 bg-line animate-pulse w-3/4"></div>
                     </div>
                   ) : collections && collections.length > 0 ? (
                     collections.map((col) => (
                       <Link
                         key={col._id}
-                        href={`/collections/${col.slug}`}
-                        className="block px-3 py-2 text-xs font-medium text-secondary hover:text-primary hover:bg-input transition-colors truncate"
+                        href={`/collection/${col.slug}`}
+                        className="block px-5 py-3.5 text-sm font-medium uppercase tracking-wider text-primary hover:bg-input transition-colors truncate"
                       >
                         {col.name}
                       </Link>
                     ))
                   ) : (
-                    <p className="px-3 py-2 text-xs text-muted">
+                    <p className="px-5 py-3.5 text-sm text-muted">
                       Chưa có bộ sưu tập
                     </p>
                   )}
@@ -191,45 +216,50 @@ export default function Header() {
                 onMouseEnter={() => setActiveDropdown("products")}
                 onMouseLeave={() => setActiveDropdown(null)}
               >
-                <button
-                  type="button"
-                  className="flex items-center gap-1 font-medium text-secondary hover:text-primary transition-colors cursor-pointer"
+                <Link
+                  href="/product"
+                  className={`flex items-center gap-1.5 font-semibold hover:text-primary transition-colors cursor-pointer ${
+                    pathname.startsWith("/product") ? "text-primary font-bold" : "text-secondary"
+                  }`}
                 >
                   <span>Sản phẩm</span>
-                  <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180" />
-                </button>
+                  <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />
+                </Link>
 
                 <div
-                  className={`absolute left-0 top-full -mt-2 w-48 bg-card border border-line shadow-box p-3 space-y-1 transition-all duration-200 ${
+                  className={`absolute left-0 top-full -mt-2 w-64 bg-card border border-line shadow-xl divide-y divide-line transition-all duration-200 ${
                     activeDropdown === "products"
                       ? "opacity-100 visible translate-y-0"
                       : "opacity-0 invisible -translate-y-2 pointer-events-none"
                   }`}
                 >
                   <Link
-                    href="/products?category=ao"
-                    className="block px-3 py-2 text-xs font-medium text-secondary hover:text-primary hover:bg-input transition-colors"
+                    href="/product"
+                    className="block px-5 py-3.5 text-sm font-medium uppercase tracking-wider text-primary hover:bg-input transition-colors truncate"
                   >
-                    Tất cả áo
+                    Tất cả
                   </Link>
-                  <Link
-                    href="/products?category=quan"
-                    className="block px-3 py-2 text-xs font-medium text-secondary hover:text-primary hover:bg-input transition-colors"
-                  >
-                    Tất cả quần
-                  </Link>
-                  <Link
-                    href="/products?category=dam-vay"
-                    className="block px-3 py-2 text-xs font-medium text-secondary hover:text-primary hover:bg-input transition-colors"
-                  >
-                    Đầm & Váy
-                  </Link>
-                  <Link
-                    href="/products?category=phu-kien"
-                    className="block px-3 py-2 text-xs font-medium text-secondary hover:text-primary hover:bg-input transition-colors"
-                  >
-                    Phụ kiện thời trang
-                  </Link>
+
+                  {isCategoriesLoading ? (
+                    <div className="py-3.5 px-5 space-y-3">
+                      <div className="h-4 bg-line animate-pulse"></div>
+                      <div className="h-4 bg-line animate-pulse w-3/4"></div>
+                    </div>
+                  ) : categories && categories.length > 0 ? (
+                    categories.map((cat) => (
+                      <Link
+                        key={cat._id}
+                        href={`/product/${cat.slug}`}
+                        className="block px-5 py-3.5 text-sm font-medium uppercase tracking-wider text-primary hover:bg-input transition-colors truncate"
+                      >
+                        {cat.name}
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="px-5 py-3.5 text-sm text-muted">
+                      Chưa có danh mục
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -247,39 +277,32 @@ export default function Header() {
                 onMouseEnter={() => setActiveDropdown("about")}
                 onMouseLeave={() => setActiveDropdown(null)}
               >
-                <button
-                  type="button"
-                  className="flex items-center gap-1 font-medium text-secondary hover:text-primary transition-colors cursor-pointer"
+                <Link
+                  href="/introduce/about-us"
+                  className={`flex items-center gap-1.5 font-semibold hover:text-primary transition-colors cursor-pointer ${
+                    pathname.startsWith("/introduce") ? "text-primary font-bold" : "text-secondary"
+                  }`}
                 >
                   <span>Giới thiệu</span>
-                  <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180" />
-                </button>
+                  <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />
+                </Link>
 
                 <div
-                  className={`absolute left-0 top-full -mt-2 w-48 bg-card border border-line shadow-box p-3 space-y-1 transition-all duration-200 ${
+                  className={`absolute left-0 top-full -mt-2 w-64 bg-card border border-line shadow-xl divide-y divide-line transition-all duration-200 ${
                     activeDropdown === "about"
                       ? "opacity-100 visible translate-y-0"
                       : "opacity-0 invisible -translate-y-2 pointer-events-none"
                   }`}
                 >
-                  <Link
-                    href="/about"
-                    className="block px-3 py-2 text-xs font-medium text-secondary hover:text-primary hover:bg-input transition-colors"
-                  >
-                    Về THE LUKI
-                  </Link>
-                  <Link
-                    href="/blog"
-                    className="block px-3 py-2 text-xs font-medium text-secondary hover:text-primary hover:bg-input transition-colors"
-                  >
-                    Tin tức & Blog
-                  </Link>
-                  <Link
-                    href="/faq"
-                    className="block px-3 py-2 text-xs font-medium text-secondary hover:text-primary hover:bg-input transition-colors"
-                  >
-                    Hỏi đáp FAQ
-                  </Link>
+                  {INTRODUCE_LINKS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="block px-5 py-3.5 text-sm font-medium uppercase tracking-wider text-primary hover:bg-input transition-colors truncate"
+                    >
+                      {item.title}
+                    </Link>
+                  ))}
                 </div>
               </div>
             </nav>
@@ -423,14 +446,14 @@ export default function Header() {
                 Trang chủ
               </Link>
               <Link
-                href="/collections"
+                href="/collection"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="hover:text-primary py-1"
               >
                 Collections
               </Link>
               <Link
-                href="/products"
+                href="/product"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="hover:text-primary py-1"
               >
@@ -444,7 +467,7 @@ export default function Header() {
                 Sale
               </Link>
               <Link
-                href="/about"
+                href="/introduce/about-us"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="hover:text-primary py-1"
               >

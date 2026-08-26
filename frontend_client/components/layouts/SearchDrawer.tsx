@@ -20,7 +20,7 @@ export default function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/product?search=${encodeURIComponent(searchQuery.trim())}`);
       onClose();
       setSearchQuery("");
     }
@@ -28,7 +28,7 @@ export default function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
 
   const handleTagClick = (tag: string) => {
     setSearchQuery(tag);
-    router.push(`/products?q=${encodeURIComponent(tag)}`);
+    router.push(`/product?search=${encodeURIComponent(tag)}`);
     onClose();
     setSearchQuery("");
   };
@@ -57,7 +57,8 @@ export default function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
           </div>
         }
         placement="right"
-        width={420}
+        size="default"
+        styles={{ wrapper: { maxWidth: 420, width: "100%" } }}
         open={isOpen}
         onClose={onClose}
         className="[&_.ant-drawer-header]:!border-b [&_.ant-drawer-header]:!border-line [&_.ant-drawer-body]:!p-6"
@@ -116,7 +117,7 @@ export default function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
             </p>
             <div className="space-y-2 text-xs font-medium text-secondary">
               <Link
-                href="/products?category=ao"
+                href="/product/ao"
                 onClick={onClose}
                 className="flex items-center justify-between py-2 px-3 hover:bg-input hover:text-primary transition-colors"
               >
@@ -124,7 +125,7 @@ export default function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
                 <ArrowRight className="w-3.5 h-3.5 text-muted" />
               </Link>
               <Link
-                href="/products?category=quan"
+                href="/product/quan"
                 onClick={onClose}
                 className="flex items-center justify-between py-2 px-3 hover:bg-input hover:text-primary transition-colors"
               >
@@ -132,7 +133,7 @@ export default function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
                 <ArrowRight className="w-3.5 h-3.5 text-muted" />
               </Link>
               <Link
-                href="/products?category=dam-vay"
+                href="/product/dam-vay"
                 onClick={onClose}
                 className="flex items-center justify-between py-2 px-3 hover:bg-input hover:text-primary transition-colors"
               >
