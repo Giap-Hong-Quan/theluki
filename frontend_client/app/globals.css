@@ -1,84 +1,18 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
-/* Biến màu giao diện cho Light & Dark mode */
-:root {
-  /* Light mode */
-  --bg-page: #ffffff;             /* Màu nền toàn trang */
-  --bg-card: #ffffff;             /* Màu nền card, form */
-  --bg-subtle: #f8fafc;           /* Màu nền phụ, thanh bên */
-  --bg-input: #f8fafc;            /* Màu nền ô nhập liệu */
-
-  --text-primary: #09090b;        /* Màu chữ chính, tiêu đề */
-  --text-secondary: #52525b;      /* Màu chữ phụ, mô tả */
-  --text-muted: #a1a1aa;          /* Màu placeholder, chữ mờ */
-
-  --border-color: #e4e4e7;        /* Viền mặc định */
-  --border-hover: #a1a1aa;        /* Viền khi rê chuột (hover) */
-  --border-active: #09090b;       /* Viền khi nhấp chọn (focus/active) */
-
-  --accent-primary: #09090b;      /* Màu nút chính */
-  --accent-contrast: #ffffff;     /* Màu chữ trên nút chính */
-  --accent-blue: #2563eb;         /* Màu điểm nhấn, liên kết */
-  --shadow-box: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05); /* Đổ bóng nhẹ */
-}
-
-.dark {
-  /* Dark mode */
-  --bg-page: #09090b;             /* Màu nền toàn trang */
-  --bg-card: #121215;             /* Màu nền card, form */
-  --bg-subtle: #18181b;           /* Màu nền phụ, thanh bên */
-  --bg-input: #18181b;            /* Màu nền ô nhập liệu */
-
-  --text-primary: #f4f4f5;        /* Màu chữ chính, tiêu đề */
-  --text-secondary: #a1a1aa;      /* Màu chữ phụ, mô tả */
-  --text-muted: #71717a;          /* Màu placeholder, chữ mờ */
-
-  --border-color: #3f3f46;        /* Viền mặc định (sáng rõ trên nền tối) */
-  --border-hover: #71717a;        /* Viền khi rê chuột (hover) */
-  --border-active: #ffffff;       /* Viền khi nhấp chọn (focus/active) trắng sáng */
-
-  --accent-primary: #f4f4f5;      /* Màu nút chính */
-  --accent-contrast: #09090b;     /* Màu chữ trên nút chính */
-  --accent-blue: #60a5fa;         /* Màu điểm nhấn, liên kết */
-  --shadow-box: 0 1px 3px 0 rgba(0, 0, 0, 0.4); /* Đổ bóng tối */
-}
-
-/* Đăng ký các token vào hệ thống class utility của Tailwind CSS v4 */
 @theme {
-  --color-page: var(--bg-page);
-  --color-card: var(--bg-card);
-  --color-subtle: var(--bg-subtle);
-  --color-input: var(--bg-input);
-
-  --color-primary: var(--text-primary);
-  --color-secondary: var(--text-secondary);
-  --color-muted: var(--text-muted);
-
-  --color-line: var(--border-color);
-  --color-line-dark: var(--border-hover);
-  --color-line-focus: var(--border-active);
-
-  --color-accent: var(--accent-primary);
-  --color-accent-contrast: var(--accent-contrast);
-  --color-accent-blue: var(--accent-blue);
-
-  --shadow-box: var(--shadow-box);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
 * {
-  border-color: var(--border-color);
-}
-
-html {
-  color-scheme: light dark;
+  border-color: #e4e4e7;
 }
 
 body {
-  background-color: var(--bg-page);
-  color: var(--text-primary);
-  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  color: #09090b;
   min-height: 100vh;
 }
 
@@ -89,13 +23,13 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-page);
+  background: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+  background: #e4e4e7;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: #a1a1aa;
 }

@@ -18,8 +18,6 @@ export default function LoginPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"otp" | "password">("password");
   const [showPassword, setShowPassword] = useState(false);
-  // Loading state will be derived from react-query mutation
-
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -31,7 +29,7 @@ export default function LoginPage() {
     },
   });
  
-  const rememberMe = watch("rememberMe");  // follow state
+  const rememberMe = watch("rememberMe");
   const loginMutation = useLogin();
 
   // Xử lý gửi form đăng nhập
@@ -39,7 +37,6 @@ export default function LoginPage() {
     try {
       await loginMutation.mutateAsync(data);
     } catch (error: any) {
-      // Kiểm tra đơn giản qua thông báo lỗi chưa xác minh OTP
       if (
         error?.message?.includes("chưa được xác minh OTP") ||
         error?.message?.includes("chưa xác minh")
@@ -65,6 +62,7 @@ export default function LoginPage() {
       toast.error("Đăng nhập Google thất bại!");
     },
   });
+
   return (
     <>
       {/* Overlay loader when login or Google auth is pending */}
@@ -77,25 +75,25 @@ export default function LoginPage() {
         </div>
       )}
 
-      <div className="w-full bg-card border border-line p-8 sm:p-10 shadow-box rounded-none transition-colors duration-200">
+      <div className="w-full bg-white border border-zinc-200 p-8 sm:p-10 shadow-sm rounded-none transition-colors duration-200">
         {/* 1. Header / Logo Branding */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-3">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-[0.25em] text-primary uppercase">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-[0.25em] text-zinc-900 uppercase">
               THE LUKI
             </h1>
           </Link>
-          <p className="text-xs sm:text-sm text-secondary tracking-wide">
+          <p className="text-xs sm:text-sm text-zinc-600 tracking-wide">
             Chào mừng bạn quay lại
           </p>
         </div>
 
-        {/* 2. Đăng nhập nhanh với Social (Dạng nút vuông sắc nét) */}
+        {/* 2. Đăng nhập nhanh với Social */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           {/* Facebook Button */}
           <button
             type="button"
-            className="h-11 px-4 border border-line bg-input hover:border-line-dark text-primary transition-colors flex items-center justify-center gap-2 text-xs font-semibold rounded-none"
+            className="h-11 px-4 border border-zinc-200 bg-zinc-50 hover:border-zinc-400 text-zinc-900 transition-colors flex items-center justify-center gap-2 text-xs font-semibold rounded-none"
           >
             <Image src="/fb.svg" alt="Facebook" width={20} height={20} className="w-5 h-5 object-contain" />
             <span>Facebook</span>
@@ -106,10 +104,10 @@ export default function LoginPage() {
             type="button"
             onClick={() => handleGoogleLogin()}
             disabled={googleAuthMutation.isPending}
-            className="h-11 px-4 border border-line bg-input hover:border-line-dark text-primary transition-colors flex items-center justify-center gap-2 text-xs font-semibold rounded-none cursor-pointer disabled:opacity-50"
+            className="h-11 px-4 border border-zinc-200 bg-zinc-50 hover:border-zinc-400 text-zinc-900 transition-colors flex items-center justify-center gap-2 text-xs font-semibold rounded-none cursor-pointer disabled:opacity-50"
           >
             {googleAuthMutation.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <Loader2 className="w-4 h-4 animate-spin text-zinc-900" />
             ) : (
               <Image src="/gg.svg" alt="Google" width={20} height={20} className="w-5 h-5 object-contain" />
             )}
@@ -119,21 +117,21 @@ export default function LoginPage() {
 
         {/* 3. Divider Hoặc */}
         <div className="relative flex items-center justify-center my-6">
-          <div className="w-full border-t border-line" />
-          <span className="absolute bg-card px-3 text-xs text-muted uppercase tracking-widest transition-colors">
+          <div className="w-full border-t border-zinc-200" />
+          <span className="absolute bg-white px-3 text-xs text-zinc-400 uppercase tracking-widest transition-colors">
             Hoặc
           </span>
         </div>
 
-        {/* 4. Tabs vuông cổ điển */}
-        <div className="grid grid-cols-2 border-b border-line mb-6">
+        {/* 4. Tabs */}
+        <div className="grid grid-cols-2 border-b border-zinc-200 mb-6">
           <button
             type="button"
             onClick={() => setActiveTab("otp")}
             className={`py-3 text-xs font-bold uppercase tracking-wider transition-all relative ${
               activeTab === "otp"
-                ? "text-primary after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-accent"
-                : "text-muted hover:text-primary"
+                ? "text-zinc-900 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-zinc-900"
+                : "text-zinc-400 hover:text-zinc-900"
             }`}
           >
             OTP
@@ -144,8 +142,8 @@ export default function LoginPage() {
             onClick={() => setActiveTab("password")}
             className={`py-3 text-xs font-bold uppercase tracking-wider transition-all relative ${
               activeTab === "password"
-                ? "text-primary after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-accent"
-                : "text-muted hover:text-primary"
+                ? "text-zinc-900 after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-zinc-900"
+                : "text-zinc-400 hover:text-zinc-900"
             }`}
           >
             Mật khẩu
@@ -157,7 +155,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Field: Email */}
             <div>
-              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-primary mb-1.5">
+              <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5">
                 Email
               </label>
               <input
@@ -166,8 +164,8 @@ export default function LoginPage() {
                 autoComplete="username"
                 {...register("email")}
                 placeholder="name@example.com"
-                className={`w-full h-11 px-3.5 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none transition-colors placeholder:text-muted ${
-                  errors.email ? "border-red-500" : ""
+                className={`w-full h-11 px-3.5 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
+                  errors.email ? "border-red-500" : "border-zinc-200"
                 }`}
               />
               {errors.email && (
@@ -177,7 +175,7 @@ export default function LoginPage() {
 
             {/* Field: Mật khẩu */}
             <div>
-              <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-primary mb-1.5">
+              <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5">
                 Mật khẩu
               </label>
               <div className="relative flex items-center">
@@ -187,14 +185,14 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   {...register("password")}
                   placeholder="••••••••"
-                  className={`w-full h-11 pl-3.5 pr-10 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none transition-colors placeholder:text-muted ${
-                    errors.password ? "border-red-500" : ""
+                  className={`w-full h-11 pl-3.5 pr-10 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
+                    errors.password ? "border-red-500" : "border-zinc-200"
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-muted hover:text-primary transition-colors p-1"
+                  className="absolute right-3 text-zinc-400 hover:text-zinc-900 transition-colors p-1"
                   title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {showPassword ? (
@@ -224,24 +222,24 @@ export default function LoginPage() {
                 <div
                   className={`w-4 h-4 border flex items-center justify-center transition-colors rounded-none ${
                     rememberMe
-                      ? "bg-accent border-accent"
-                      : "border-line group-hover:border-line-dark bg-transparent"
+                      ? "bg-zinc-900 border-zinc-900"
+                      : "border-zinc-200 group-hover:border-zinc-400 bg-transparent"
                   }`}
                 >
                   <Check
-                    className={`w-3 h-3 text-accent-contrast stroke-[3] transition-opacity ${
+                    className={`w-3 h-3 text-white stroke-[3] transition-opacity ${
                       rememberMe ? "opacity-100" : "opacity-0"
                     }`}
                   />
                 </div>
-                <span className="text-xs text-secondary font-medium group-hover:text-primary transition-colors">
+                <span className="text-xs text-zinc-600 font-medium group-hover:text-zinc-900 transition-colors">
                   Ghi nhớ đăng nhập
                 </span>
               </label>
 
               <Link
                 href="/forgot-password"
-                className="text-xs text-secondary hover:text-primary hover:underline transition-colors"
+                className="text-xs text-zinc-600 hover:text-zinc-900 hover:underline transition-colors"
               >
                 Quên mật khẩu?
               </Link>
@@ -251,7 +249,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className="w-full mt-4 h-12 bg-accent hover:opacity-90 text-accent-contrast font-bold text-xs uppercase tracking-[0.15em] transition-opacity rounded-none flex items-center justify-center gap-2 active:scale-[0.99]"
+              className="w-full mt-4 h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-[0.15em] transition-colors rounded-none flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer"
             >
               {loginMutation.isPending ? (
                 <>
@@ -267,19 +265,19 @@ export default function LoginPage() {
           /* Tab OTP */
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-primary mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5">
                 Email
               </label>
               <input
                 type="email"
                 placeholder="name@example.com"
-                className="w-full h-11 px-3.5 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none placeholder:text-muted"
+                className="w-full h-11 px-3.5 text-sm bg-zinc-50 border border-zinc-200 hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none placeholder:text-zinc-400"
               />
             </div>
 
             <button
               type="button"
-              className="w-full h-12 bg-accent hover:opacity-90 text-accent-contrast font-bold text-xs uppercase tracking-[0.15em] transition-opacity rounded-none"
+              className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-[0.15em] transition-colors rounded-none cursor-pointer"
               onClick={() => toast("Chức năng gửi OTP đang hoàn thiện!")}
             >
               GỬI MÃ OTP
@@ -288,11 +286,11 @@ export default function LoginPage() {
         )}
 
         {/* 6. Footer Đăng ký ngay */}
-        <div className="mt-8 text-center text-xs text-secondary tracking-wide">
+        <div className="mt-8 text-center text-xs text-zinc-600 tracking-wide">
           Chưa có tài khoản?{" "}
           <Link
             href="/register"
-            className="text-primary font-bold hover:underline ml-1"
+            className="text-zinc-900 font-bold hover:underline ml-1"
           >
             Đăng ký ngay
           </Link>

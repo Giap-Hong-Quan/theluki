@@ -7,19 +7,10 @@ import removeVietnameseTones from "../utils/removeVietnameseTones.js";
 // 1. Tạo mới danh mục
 export const createCategoryController = async (req, res, next) => {
     try {
-        const { name, parent } = req.body;
+        const { name } = req.body;
         const existCategory = await Category.findOne({ name });
         if (existCategory) {
             throw new ApiError(409, "Danh mục đã tồn tại");
-        }
-        if (parent) {
-            if (!mongoose.Types.ObjectId.isValid(parent)) {
-                throw new ApiError(400, "Id danh mục cha không đúng định dạng");
-            }
-            const existParent = await Category.findById(parent);
-            if (!existParent) {
-                throw new ApiError(404, "Danh mục cha không tồn tại");
-            }
         }
         const category = await Category.create(req.body);
         success(res, category, "Tạo danh mục thành công", 201);
@@ -73,24 +64,11 @@ export const updateCategoryController = async (req, res, next) => {
             throw new ApiError(404, "Danh mục không tồn tại");
         }
 
-        const { name, parent } = req.body;
+        const { name } = req.body;
         if (name && name !== existCategory.name) {
             const nameConflict = await Category.findOne({ name, _id: { $ne: id } });
             if (nameConflict) {
                 throw new ApiError(409, "Tên danh mục đã tồn tại");
-            }
-        }
-
-        if (parent) {
-            if (!mongoose.Types.ObjectId.isValid(parent)) {
-                throw new ApiError(400, "Id danh mục cha không đúng định dạng");
-            }
-            if (parent === id) {
-                throw new ApiError(400, "Danh mục cha không thể là chính nó");
-            }
-            const existParent = await Category.findById(parent);
-            if (!existParent) {
-                throw new ApiError(404, "Danh mục cha không tồn tại");
             }
         }
 
@@ -231,10 +209,10 @@ export const restoreCategoryController = async (req, res, next) => {
     }
 };
 
-// Lấy danh sách danh mục (Phân trang + Tìm kiếm + Lọc mở rộng: isDeleted, isActive, parent)
+// Lấy danh sách danh mục (Phân trang + Tìm kiếm + Lọc mở rộng: isDeleted, isActive)
 export const getAllCategoryController = async (req, res, next) => {
     try {
-        const { page = 1, sizePage = 10, search, isDeleted, isActive, parent } = req.query;
+        const { page = 1, sizePage = 10, search, isDeleted, isActive } = req.query;
 
         const query = {};
 
@@ -248,13 +226,7 @@ export const getAllCategoryController = async (req, res, next) => {
         if (typeof isActive === "boolean") {
             query.isActive = isActive;
         }
-        // 3. Lọc theo danh mục cha (parent)
-        if (parent === "null" || parent === "root") {
-            query.parent = null;
-        } else if (parent && mongoose.Types.ObjectId.isValid(parent)) {
-            query.parent = new mongoose.Types.ObjectId(parent);
-        }
-        // 4. Lọc tìm kiếm theo tên có dấu và không dấu
+        // 3. Lọc tìm kiếm theo tên có dấu và không dấu
         if (search && search.trim() !== "") {
             const searchTrim = search.trim();
             const cleanSearch = removeVietnameseTones(searchTrim);
@@ -299,12 +271,6 @@ export const forceDeleteCategoryController = async (req, res, next) => {
         const category = await Category.findById(id);
         if (!category) {
             throw new ApiError(404, "Danh mục không tồn tại");
-        }
-
-        // Kiểm tra xem danh mục này có danh mục con nào đang phụ thuộc hay không
-        const hasChildren = await Category.exists({ parent: id });
-        if (hasChildren) {
-            throw new ApiError(400, "Không thể xóa vĩnh viễn danh mục đang chứa danh mục con");
         }
 
         await Category.findByIdAndDelete(id);

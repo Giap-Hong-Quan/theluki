@@ -1,8 +1,21 @@
+import Breadcrumb from '@/components/common/Breadcrumb'
 import React from 'react'
 
 const collection = () => {
   return (
-    <div className='text-3xl font-bold underline'>collection</div>
+    <div  >
+       <Breadcrumb
+              items={[
+                {
+                  label: "Trang chủ",
+                  href: "/",
+                },
+                {
+                  label: "Bộ sưu tập",
+                },
+              ]}
+            />
+    </div>
   )
 }
 

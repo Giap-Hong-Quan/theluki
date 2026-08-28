@@ -5,14 +5,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Steps, Input, ConfigProvider, theme as antdTheme } from "antd";
+import { Steps, Input, ConfigProvider } from "antd";
 import {
   Eye,
   EyeOff,
   Loader2,
   RotateCcw,
 } from "lucide-react";
-import toast from "react-hot-toast";
 
 import {
   registerSchema,
@@ -25,12 +24,10 @@ import {
   useVerifyOtp,
   useSendOtp,
 } from "@/hooks/useAuth";
-import { useUIStore } from "@/stores/uiStore";
 
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { theme } = useUIStore();
   
   // Tự động nhận email và step từ URL (ví dụ: /register?email=...&step=2)
   const emailParam = searchParams.get("email");
@@ -136,31 +133,27 @@ function RegisterForm() {
   };
 
   return (
-    <div className="w-full bg-card border border-line p-8 sm:p-10 shadow-box rounded-none transition-colors duration-200">
+    <div className="w-full bg-white border border-zinc-200 p-8 sm:p-10 shadow-sm rounded-none transition-colors duration-200">
       {/* header */}
       <div className="text-center mb-8">
         <Link href="/" className="inline-block mb-3">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-[0.25em] text-primary uppercase">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-[0.25em] text-zinc-900 uppercase">
             THE LUKI
           </h1>
         </Link>
-        <p className="text-xs sm:text-sm text-secondary tracking-wide">
+        <p className="text-xs sm:text-sm text-zinc-600 tracking-wide">
           Tạo tài khoản mới để trải nghiệm
         </p>
       </div>
 
       {/* steps */}
-      <div className="mb-8 border-b border-line pb-6">
+      <div className="mb-8 border-b border-zinc-200 pb-6">
         <ConfigProvider
           theme={{
-            algorithm:
-              theme === "dark"
-                ? antdTheme.darkAlgorithm
-                : antdTheme.defaultAlgorithm,
             token: {
-              colorPrimary: theme === "dark" ? "#f4f4f5" : "#09090b",
-              colorText: theme === "dark" ? "#f4f4f5" : "#09090b",
-              colorTextDescription: theme === "dark" ? "#71717a" : "#a1a1aa",
+              colorPrimary: "#09090b",
+              colorText: "#09090b",
+              colorTextDescription: "#a1a1aa",
               borderRadius: 0,
               borderRadiusSM: 0,
               fontFamily: "inherit",
@@ -177,26 +170,26 @@ function RegisterForm() {
             [&_.ant-steps-item-icon]:!rounded-none
             [&_.ant-steps-item-icon]:!font-mono
             [&_.ant-steps-item-icon]:!font-bold
-            [&_.ant-steps-item-icon]:!border-line
-            [&_.ant-steps-item-process_.ant-steps-item-icon]:!bg-accent
-            [&_.ant-steps-item-process_.ant-steps-item-icon]:!text-accent-contrast
-            [&_.ant-steps-item-process_.ant-steps-item-icon]:!border-accent
-            [&_.ant-steps-item-finish_.ant-steps-item-icon]:!bg-accent
-            [&_.ant-steps-item-finish_.ant-steps-item-icon]:!text-accent-contrast
-            [&_.ant-steps-item-finish_.ant-steps-item-icon]:!border-accent
-            [&_.ant-steps-item-wait_.ant-steps-item-icon]:!bg-input
-            [&_.ant-steps-item-wait_.ant-steps-item-icon]:!text-muted
+            [&_.ant-steps-item-icon]:!border-zinc-200
+            [&_.ant-steps-item-process_.ant-steps-item-icon]:!bg-zinc-900
+            [&_.ant-steps-item-process_.ant-steps-item-icon]:!text-white
+            [&_.ant-steps-item-process_.ant-steps-item-icon]:!border-zinc-900
+            [&_.ant-steps-item-finish_.ant-steps-item-icon]:!bg-zinc-900
+            [&_.ant-steps-item-finish_.ant-steps-item-icon]:!text-white
+            [&_.ant-steps-item-finish_.ant-steps-item-icon]:!border-zinc-900
+            [&_.ant-steps-item-wait_.ant-steps-item-icon]:!bg-zinc-50
+            [&_.ant-steps-item-wait_.ant-steps-item-icon]:!text-zinc-400
             [&_.ant-steps-item-content]:!text-center
             [&_.ant-steps-item-title]:!text-[11px]
             [&_.ant-steps-item-title]:!font-bold
             [&_.ant-steps-item-title]:!uppercase
             [&_.ant-steps-item-title]:!tracking-wider
             [&_.ant-steps-item-title]:!mt-1.5
-            [&_.ant-steps-item-finish_.ant-steps-item-title]:!text-primary
-            [&_.ant-steps-item-process_.ant-steps-item-title]:!text-primary
-            [&_.ant-steps-item-wait_.ant-steps-item-title]:!text-muted
-            [&_.ant-steps-item-tail::after]:!bg-line
-            [&_.ant-steps-item-finish>.ant-steps-item-container>.ant-steps-item-tail::after]:!bg-accent
+            [&_.ant-steps-item-finish_.ant-steps-item-title]:!text-zinc-900
+            [&_.ant-steps-item-process_.ant-steps-item-title]:!text-zinc-900
+            [&_.ant-steps-item-wait_.ant-steps-item-title]:!text-zinc-400
+            [&_.ant-steps-item-tail::after]:!bg-zinc-200
+            [&_.ant-steps-item-finish>.ant-steps-item-container>.ant-steps-item-tail::after]:!bg-zinc-900
           ">
             <Steps
               current={currentStep - 1}
@@ -220,7 +213,7 @@ function RegisterForm() {
             <div>
               <label
                 htmlFor="last_name"
-                className="block text-xs font-bold uppercase tracking-wider text-primary mb-1.5"
+                className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5"
               >
                 Họ
               </label>
@@ -230,8 +223,8 @@ function RegisterForm() {
                 autoComplete="family-name"
                 {...registerStep1("last_name")}
                 placeholder="Nguyễn"
-                className={`w-full h-11 px-3.5 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none transition-colors placeholder:text-muted ${
-                  errorsStep1.last_name ? "border-red-500" : ""
+                className={`w-full h-11 px-3.5 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
+                  errorsStep1.last_name ? "border-red-500" : "border-zinc-200"
                 }`}
               />
               {errorsStep1.last_name && (
@@ -243,7 +236,7 @@ function RegisterForm() {
             <div>
               <label
                 htmlFor="first_name"
-                className="block text-xs font-bold uppercase tracking-wider text-primary mb-1.5"
+                className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5"
               >
                 Tên
               </label>
@@ -253,8 +246,8 @@ function RegisterForm() {
                 autoComplete="given-name"
                 {...registerStep1("first_name")}
                 placeholder="Văn A"
-                className={`w-full h-11 px-3.5 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none transition-colors placeholder:text-muted ${
-                  errorsStep1.first_name ? "border-red-500" : ""
+                className={`w-full h-11 px-3.5 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
+                  errorsStep1.first_name ? "border-red-500" : "border-zinc-200"
                 }`}
               />
               {errorsStep1.first_name && (
@@ -267,7 +260,7 @@ function RegisterForm() {
           <div>
             <label
               htmlFor="email"
-              className="block text-xs font-bold uppercase tracking-wider text-primary mb-1.5"
+              className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5"
             >
               Email
             </label>
@@ -277,8 +270,8 @@ function RegisterForm() {
               autoComplete="username"
               {...registerStep1("email")}
               placeholder="name@example.com"
-              className={`w-full h-11 px-3.5 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none transition-colors placeholder:text-muted ${
-                errorsStep1.email ? "border-red-500" : ""
+              className={`w-full h-11 px-3.5 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
+                errorsStep1.email ? "border-red-500" : "border-zinc-200"
               }`}
             />
             {errorsStep1.email && (
@@ -290,7 +283,7 @@ function RegisterForm() {
           <div>
             <label
               htmlFor="password"
-              className="block text-xs font-bold uppercase tracking-wider text-primary mb-1.5"
+              className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5"
             >
               Mật khẩu
             </label>
@@ -301,14 +294,14 @@ function RegisterForm() {
                 autoComplete="new-password"
                 {...registerStep1("password")}
                 placeholder="••••••••"
-                className={`w-full h-11 pl-3.5 pr-10 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none transition-colors placeholder:text-muted ${
-                  errorsStep1.password ? "border-red-500" : ""
+                className={`w-full h-11 pl-3.5 pr-10 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
+                  errorsStep1.password ? "border-red-500" : "border-zinc-200"
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 text-muted hover:text-primary transition-colors p-1"
+                className="absolute right-3 text-zinc-400 hover:text-zinc-900 transition-colors p-1"
                 title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -323,7 +316,7 @@ function RegisterForm() {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block text-xs font-bold uppercase tracking-wider text-primary mb-1.5"
+              className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5"
             >
               Nhập lại mật khẩu
             </label>
@@ -334,14 +327,14 @@ function RegisterForm() {
                 autoComplete="new-password"
                 {...registerStep1("confirmPassword")}
                 placeholder="••••••••"
-                className={`w-full h-11 pl-3.5 pr-10 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none transition-colors placeholder:text-muted ${
-                  errorsStep1.confirmPassword ? "border-red-500" : ""
+                className={`w-full h-11 pl-3.5 pr-10 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
+                  errorsStep1.confirmPassword ? "border-red-500" : "border-zinc-200"
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 text-muted hover:text-primary transition-colors p-1"
+                className="absolute right-3 text-zinc-400 hover:text-zinc-900 transition-colors p-1"
                 title={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
                 {showConfirmPassword ? (
@@ -362,7 +355,7 @@ function RegisterForm() {
           <button
             type="submit"
             disabled={isSubmittingStep1 || registerMutation.isPending}
-            className="w-full mt-6 h-12 bg-accent hover:opacity-90 text-accent-contrast font-bold text-xs uppercase tracking-[0.15em] transition-opacity rounded-none flex items-center justify-center gap-2 active:scale-[0.99]"
+            className="w-full mt-6 h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-[0.15em] transition-colors rounded-none flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer disabled:opacity-50"
           >
             {isSubmittingStep1 || registerMutation.isPending ? (
               <>
@@ -380,9 +373,9 @@ function RegisterForm() {
       {currentStep === 2 && (
         <form onSubmit={handleSubmitOtp(onSubmitStep2)} className="space-y-6">
           <div className="text-center mb-2">
-            <p className="text-xs text-secondary">
+            <p className="text-xs text-zinc-600">
               Mã xác thực đã gửi đến{" "}
-              <span className="font-semibold text-primary font-mono block sm:inline mt-0.5 sm:mt-0">
+              <span className="font-semibold text-zinc-900 font-mono block sm:inline mt-0.5 sm:mt-0">
                 {registeredEmail}
               </span>
             </p>
@@ -393,15 +386,11 @@ function RegisterForm() {
             <div className="flex justify-center">
               <ConfigProvider
                 theme={{
-                  algorithm:
-                    theme === "dark"
-                      ? antdTheme.darkAlgorithm
-                      : antdTheme.defaultAlgorithm,
                   token: {
-                    colorPrimary: theme === "dark" ? "#ffffff" : "#09090b",
-                    colorText: theme === "dark" ? "#f4f4f5" : "#09090b",
-                    colorBgContainer: theme === "dark" ? "#18181b" : "#f8fafc",
-                    colorBorder: theme === "dark" ? "#52525b" : "#e4e4e7",
+                    colorPrimary: "#09090b",
+                    colorText: "#09090b",
+                    colorBgContainer: "#f8fafc",
+                    colorBorder: "#e4e4e7",
                     borderRadius: 0,
                     controlHeight: 48,
                   },
@@ -417,7 +406,7 @@ function RegisterForm() {
                       autoFocus
                       formatter={(str) => str.toUpperCase()}
                       {...field}
-                      className="[&_input]:!rounded-none [&_input]:!font-mono [&_input]:!font-bold [&_input]:!text-lg [&_input]:!h-12 [&_input]:!w-10 sm:[&_input]:!w-12 [&_input]:!border-line hover:[&_input]:!border-line-dark focus:[&_input]:!border-line-focus dark:focus:[&_input]:!border-white [&_input]:!bg-input [&_input]:!text-primary"
+                      className="[&_input]:!rounded-none [&_input]:!font-mono [&_input]:!font-bold [&_input]:!text-lg [&_input]:!h-12 [&_input]:!w-10 sm:[&_input]:!w-12 [&_input]:!border-zinc-200 hover:[&_input]:!border-zinc-400 focus:[&_input]:!border-zinc-900 [&_input]:!bg-zinc-50 [&_input]:!text-zinc-900"
                     />
                   )}
                 />
@@ -431,10 +420,10 @@ function RegisterForm() {
           </div>
 
           {/* Hàng đếm ngược & Gửi lại OTP */}
-          <div className="flex items-center justify-between text-xs pt-1 border-t border-line pt-3">
-            <span className="text-muted">
+          <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-200 pt-3">
+            <span className="text-zinc-400">
               {countdown > 0 ? (
-                <>Gửi lại sau: <span className="font-mono font-bold text-primary">{countdown}s</span></>
+                <>Gửi lại sau: <span className="font-mono font-bold text-zinc-900">{countdown}s</span></>
               ) : (
                 "Chưa nhận được mã?"
               )}
@@ -446,8 +435,8 @@ function RegisterForm() {
               onClick={handleResendOtp}
               className={`font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 ${
                 canResend
-                  ? "text-primary hover:underline cursor-pointer"
-                  : "text-muted cursor-not-allowed opacity-50"
+                  ? "text-zinc-900 hover:underline cursor-pointer"
+                  : "text-zinc-400 cursor-not-allowed opacity-50"
               }`}
             >
               {sendOtpMutation.isPending ? (
@@ -463,7 +452,7 @@ function RegisterForm() {
           <button
             type="submit"
             disabled={isSubmittingOtp || verifyOtpMutation.isPending}
-            className="w-full mt-4 h-12 bg-accent hover:opacity-90 text-accent-contrast font-bold text-xs uppercase tracking-[0.15em] transition-opacity rounded-none flex items-center justify-center gap-2 active:scale-[0.99]"
+            className="w-full mt-4 h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-[0.15em] transition-colors rounded-none flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer disabled:opacity-50"
           >
             {isSubmittingOtp || verifyOtpMutation.isPending ? (
               <>
@@ -479,7 +468,7 @@ function RegisterForm() {
           <button
             type="button"
             onClick={() => setCurrentStep(1)}
-            className="w-full text-center text-xs text-secondary hover:text-primary transition-colors pt-2 uppercase font-semibold tracking-wider"
+            className="w-full text-center text-xs text-zinc-600 hover:text-zinc-900 transition-colors pt-2 uppercase font-semibold tracking-wider cursor-pointer"
           >
             ← Đổi thông tin email
           </button>
@@ -488,11 +477,11 @@ function RegisterForm() {
 
       {/* 3. Footer chuyển sang Đăng nhập (Chỉ hiển thị ở Bước 1) */}
       {currentStep === 1 && (
-        <div className="mt-8 text-center text-xs text-secondary tracking-wide">
+        <div className="mt-8 text-center text-xs text-zinc-600 tracking-wide">
           Đã có tài khoản?{" "}
           <Link
             href="/login"
-            className="text-primary font-bold hover:underline ml-1"
+            className="text-zinc-900 font-bold hover:underline ml-1"
           >
             Đăng nhập ngay
           </Link>
@@ -506,8 +495,8 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <div className="w-full bg-card border border-line p-12 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <div className="w-full bg-white border border-zinc-200 p-12 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-zinc-900" />
         </div>
       }
     >

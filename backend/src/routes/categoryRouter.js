@@ -38,11 +38,6 @@ const categoryRouter = express.Router();
  *               name:
  *                 type: string
  *                 example: "Áo Thun Nam"
- *               parent:
- *                 type: string
- *                 nullable: true
- *                 description: ID của danh mục cha (nếu có)
- *                 example: "67a8aecbf19fc340b0062caf"
  *               image:
  *                 type: string
  *                 nullable: true
@@ -50,7 +45,7 @@ const categoryRouter = express.Router();
  *                 example: "https://res.cloudinary.com/demo/image/upload/v12345/category.jpg"
  *               order:
  *                 type: integer
- *                 description: Thứ tự hiển thị trong cùng cấp
+ *                 description: Thứ tự hiển thị
  *                 example: 1
  *               seo:
  *                 type: object
@@ -75,8 +70,6 @@ const categoryRouter = express.Router();
  *         description: Chưa đăng nhập hoặc Token không hợp lệ
  *       403:
  *         description: Không có quyền truy cập (Yêu cầu role admin hoặc staff)
- *       404:
- *         description: Danh mục cha không tồn tại
  *       409:
  *         description: Tên danh mục đã tồn tại
  *       500:
@@ -150,9 +143,6 @@ categoryRouter.put("/reorder", verifyToken, authorizeRoles("admin", "staff"), re
  *             properties:
  *               name:
  *                 type: string
- *               parent:
- *                 type: string
- *                 nullable: true
  *               image:
  *                 type: string
  *                 nullable: true
@@ -352,11 +342,6 @@ categoryRouter.put("/:id/restore", verifyToken, authorizeRoles("admin", "staff")
  *         schema:
  *           type: boolean
  *         description: Lọc theo trạng thái true (đang bật) hoặc false (đang tắt)
- *       - in: query
- *         name: parent
- *         schema:
- *           type: string
- *         description: Lọc theo ObjectId danh mục cha (hoặc 'null' / 'root' để lấy danh mục cấp 1)
  *     responses:
  *       200:
  *         description: Lấy danh sách thành công
@@ -371,7 +356,7 @@ categoryRouter.get("/", validate(getCategoriesQueryZod), getAllCategoryControlle
  *   delete:
  *     summary: Xóa vĩnh viễn danh mục (Hard Delete)
  *     tags: [Category]
- *     description: Xóa hoàn toàn danh mục khỏi Database (Yêu cầu quyền admin). Không cho phép xóa nếu danh mục đang chứa danh mục con.
+ *     description: Xóa hoàn toàn danh mục khỏi Database (Yêu cầu quyền admin).
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -384,8 +369,6 @@ categoryRouter.get("/", validate(getCategoriesQueryZod), getAllCategoryControlle
  *     responses:
  *       200:
  *         description: Xóa vĩnh viễn danh mục thành công
- *       400:
- *         description: Danh mục đang chứa danh mục con — không thể xóa
  *       401:
  *         description: Chưa đăng nhập
  *       403:

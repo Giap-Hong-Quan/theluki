@@ -22,8 +22,8 @@ export default function Breadcrumb({ items = [] }: BreadcrumbProps) {
   );
 
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-secondary">
-      <Link href="/" className="hover:text-primary transition-colors">
+    <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-lg text-zinc-600">
+      <Link href="/" className="hover:text-zinc-900 transition-colors">
         Trang chủ
       </Link>
 
@@ -31,13 +31,13 @@ export default function Breadcrumb({ items = [] }: BreadcrumbProps) {
         const isLast = index === filteredItems.length - 1;
         return (
           <div key={index} className="flex items-center gap-2">
-            <ChevronRight className="w-4 h-4 text-muted shrink-0" />
+            <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
             {item.href && !isLast ? (
-              <Link href={item.href} className="hover:text-primary transition-colors">
+              <Link href={item.href} className="hover:text-zinc-900 transition-colors">
                 {item.label}
               </Link>
             ) : (
-              <span className="">
+              <span className="text-zinc-900 font-medium">
                 {item.label}
               </span>
             )}

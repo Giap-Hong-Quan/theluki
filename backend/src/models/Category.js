@@ -19,11 +19,6 @@ const CategorySchema = new mongoose.Schema(
             unique: true,
             lowercase: true
         },
-        parent: { // null = category cấp 1 
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Category",
-            default: null
-        },
         image: { // URL ảnh đại diện danh mục hoặc icon
             type: String,
             default: null

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input, ConfigProvider, theme as antdTheme } from "antd";
+import { Input, ConfigProvider } from "antd";
 import {
   Mail,
   Eye,
@@ -13,10 +13,7 @@ import {
   Loader2,
   RotateCcw,
   ArrowLeft,
-  KeyRound,
-  Lock,
 } from "lucide-react";
-import toast from "react-hot-toast";
 
 import {
   forgotPasswordSchema,
@@ -30,11 +27,9 @@ import {
   useForgotPassword,
   useResetPassword,
 } from "@/hooks/useAuth";
-import { useUIStore } from "@/stores/uiStore";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-  const { theme } = useUIStore();
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [userEmail, setUserEmail] = useState<string>("");
@@ -146,20 +141,20 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="w-full bg-card border border-line p-8 sm:p-10 shadow-box rounded-none transition-colors duration-200">
+    <div className="w-full bg-white border border-zinc-200 p-8 sm:p-10 shadow-sm rounded-none transition-colors duration-200">
       {/* 1. Header / Logo Branding */}
       <div className="text-center mb-8">
         <Link href="/" className="inline-block mb-3">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-[0.25em] text-primary uppercase">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-[0.25em] text-zinc-900 uppercase">
             THE LUKI
           </h1>
         </Link>
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-primary mt-1">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 mt-1">
           {currentStep === 1 && "Quên mật khẩu?"}
           {currentStep === 2 && "Xác thực mã OTP"}
           {currentStep === 3 && "Tạo mật khẩu mới"}
         </h2>
-        <p className="text-xs sm:text-sm text-secondary tracking-wide mt-2">
+        <p className="text-xs sm:text-sm text-zinc-600 tracking-wide mt-2">
           {currentStep === 1 &&
             "Đừng lo! Chúng mình sẽ giúp bạn lấy lại mật khẩu ngay"}
           {currentStep === 2 && `Mã xác thực đã được gửi đến ${userEmail}`}
@@ -174,12 +169,12 @@ export default function ForgotPasswordPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-xs font-bold uppercase tracking-wider text-primary mb-2"
+              className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-2"
             >
               Số điện thoại hoặc email
             </label>
             <div className="relative flex items-center">
-              <div className="absolute left-3.5 text-muted pointer-events-none">
+              <div className="absolute left-3.5 text-zinc-400 pointer-events-none">
                 <Mail className="w-4 h-4" />
               </div>
               <input
@@ -189,8 +184,8 @@ export default function ForgotPasswordPage() {
                 autoFocus
                 {...registerStep1("email")}
                 placeholder="Nhập số điện thoại hoặc email của bạn"
-                className={`w-full h-12 pl-10 pr-4 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none transition-colors placeholder:text-muted ${
-                  errorsStep1.email ? "border-red-500" : "border-line"
+                className={`w-full h-12 pl-10 pr-4 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
+                  errorsStep1.email ? "border-red-500" : "border-zinc-200"
                 }`}
               />
             </div>
@@ -204,7 +199,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={isSubmittingStep1 || forgotPasswordMutation.isPending}
-            className="w-full h-12 bg-accent hover:opacity-90 text-accent-contrast font-bold text-xs uppercase tracking-[0.15em] transition-opacity rounded-none flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer disabled:opacity-50"
+            className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-[0.15em] transition-colors rounded-none flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer disabled:opacity-50"
           >
             {isSubmittingStep1 || forgotPasswordMutation.isPending ? (
               <>
@@ -222,21 +217,17 @@ export default function ForgotPasswordPage() {
       {currentStep === 2 && (
         <form onSubmit={handleSubmitStep2(onSubmitStep2)} className="space-y-6">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-primary mb-2 text-center">
+            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-2 text-center">
               NHẬP MÃ XÁC THỰC (6 SỐ)
             </label>
             <div className="flex justify-center">
               <ConfigProvider
                 theme={{
-                  algorithm:
-                    theme === "dark"
-                      ? antdTheme.darkAlgorithm
-                      : antdTheme.defaultAlgorithm,
                   token: {
-                    colorPrimary: theme === "dark" ? "#ffffff" : "#09090b",
-                    colorText: theme === "dark" ? "#f4f4f5" : "#09090b",
-                    colorBgContainer: theme === "dark" ? "#18181b" : "#f8fafc",
-                    colorBorder: theme === "dark" ? "#52525b" : "#e4e4e7",
+                    colorPrimary: "#09090b",
+                    colorText: "#09090b",
+                    colorBgContainer: "#f8fafc",
+                    colorBorder: "#e4e4e7",
                     borderRadius: 0,
                     controlHeight: 48,
                   },
@@ -252,7 +243,7 @@ export default function ForgotPasswordPage() {
                       autoFocus
                       formatter={(str) => str.toUpperCase()}
                       {...field}
-                      className="[&_input]:!rounded-none [&_input]:!font-mono [&_input]:!font-bold [&_input]:!text-lg [&_input]:!h-12 [&_input]:!w-10 sm:[&_input]:!w-12 [&_input]:!border-line hover:[&_input]:!border-line-dark focus:[&_input]:!border-line-focus dark:focus:[&_input]:!border-white [&_input]:!bg-input [&_input]:!text-primary"
+                      className="[&_input]:!rounded-none [&_input]:!font-mono [&_input]:!font-bold [&_input]:!text-lg [&_input]:!h-12 [&_input]:!w-10 sm:[&_input]:!w-12 [&_input]:!border-zinc-200 hover:[&_input]:!border-zinc-400 focus:[&_input]:!border-zinc-900 [&_input]:!bg-zinc-50 [&_input]:!text-zinc-900"
                     />
                   )}
                 />
@@ -266,12 +257,12 @@ export default function ForgotPasswordPage() {
           </div>
 
           {/* Hàng đếm ngược & Gửi lại OTP */}
-          <div className="flex items-center justify-between text-xs pt-1 border-t border-line pt-3">
-            <span className="text-muted">
+          <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-200 pt-3">
+            <span className="text-zinc-400">
               {countdown > 0 ? (
                 <>
                   Gửi lại sau:{" "}
-                  <span className="font-mono font-bold text-primary">
+                  <span className="font-mono font-bold text-zinc-900">
                     {countdown}s
                   </span>
                 </>
@@ -286,8 +277,8 @@ export default function ForgotPasswordPage() {
               onClick={handleResendOtp}
               className={`font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-1.5 ${
                 canResend
-                  ? "text-primary hover:underline cursor-pointer"
-                  : "text-muted cursor-not-allowed opacity-50"
+                  ? "text-zinc-900 hover:underline cursor-pointer"
+                  : "text-zinc-400 cursor-not-allowed opacity-50"
               }`}
             >
               {forgotPasswordMutation.isPending ? (
@@ -302,7 +293,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={isSubmittingStep2}
-            className="w-full h-12 bg-accent hover:opacity-90 text-accent-contrast font-bold text-xs uppercase tracking-[0.15em] transition-opacity rounded-none flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer"
+            className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-[0.15em] transition-colors rounded-none flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer"
           >
             <span>TIẾP TỤC</span>
           </button>
@@ -310,7 +301,7 @@ export default function ForgotPasswordPage() {
           <button
             type="button"
             onClick={() => setCurrentStep(1)}
-            className="w-full text-center text-xs text-secondary hover:text-primary transition-colors pt-2 uppercase font-semibold tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full text-center text-xs text-zinc-600 hover:text-zinc-900 transition-colors pt-2 uppercase font-semibold tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Đổi thông tin email</span>
@@ -325,7 +316,7 @@ export default function ForgotPasswordPage() {
           <div>
             <label
               htmlFor="newPassword"
-              className="block text-xs font-bold uppercase tracking-wider text-primary mb-1.5"
+              className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5"
             >
               Mật khẩu mới
             </label>
@@ -337,14 +328,14 @@ export default function ForgotPasswordPage() {
                 autoFocus
                 {...registerStep3("newPassword")}
                 placeholder="Tối thiểu 6 ký tự"
-                className={`w-full h-11 pl-3.5 pr-10 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none transition-colors placeholder:text-muted ${
-                  errorsStep3.newPassword ? "border-red-500" : "border-line"
+                className={`w-full h-11 pl-3.5 pr-10 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
+                  errorsStep3.newPassword ? "border-red-500" : "border-zinc-200"
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 text-muted hover:text-primary transition-colors p-1 cursor-pointer"
+                className="absolute right-3 text-zinc-400 hover:text-zinc-900 transition-colors p-1 cursor-pointer"
                 title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
                 {showPassword ? (
@@ -365,7 +356,7 @@ export default function ForgotPasswordPage() {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block text-xs font-bold uppercase tracking-wider text-primary mb-1.5"
+              className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5"
             >
               Nhập lại mật khẩu mới
             </label>
@@ -376,14 +367,14 @@ export default function ForgotPasswordPage() {
                 autoComplete="new-password"
                 {...registerStep3("confirmPassword")}
                 placeholder="Nhập lại mật khẩu mới"
-                className={`w-full h-11 pl-3.5 pr-10 text-sm bg-input border hover:border-line-dark focus:border-line-focus text-primary outline-none rounded-none transition-colors placeholder:text-muted ${
-                  errorsStep3.confirmPassword ? "border-red-500" : "border-line"
+                className={`w-full h-11 pl-3.5 pr-10 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
+                  errorsStep3.confirmPassword ? "border-red-500" : "border-zinc-200"
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 text-muted hover:text-primary transition-colors p-1 cursor-pointer"
+                className="absolute right-3 text-zinc-400 hover:text-zinc-900 transition-colors p-1 cursor-pointer"
                 title={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
                 {showConfirmPassword ? (
@@ -404,7 +395,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={isSubmittingStep3 || resetPasswordMutation.isPending}
-            className="w-full mt-4 h-12 bg-accent hover:opacity-90 text-accent-contrast font-bold text-xs uppercase tracking-[0.15em] transition-opacity rounded-none flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer disabled:opacity-50"
+            className="w-full mt-4 h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs uppercase tracking-[0.15em] transition-colors rounded-none flex items-center justify-center gap-2 active:scale-[0.99] cursor-pointer disabled:opacity-50"
           >
             {isSubmittingStep3 || resetPasswordMutation.isPending ? (
               <>
@@ -420,7 +411,7 @@ export default function ForgotPasswordPage() {
           <button
             type="button"
             onClick={() => setCurrentStep(2)}
-            className="w-full text-center text-xs text-secondary hover:text-primary transition-colors pt-2 uppercase font-semibold tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full text-center text-xs text-zinc-600 hover:text-zinc-900 transition-colors pt-2 uppercase font-semibold tracking-wider flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Quay lại nhập mã OTP</span>
@@ -430,11 +421,11 @@ export default function ForgotPasswordPage() {
 
       {/* 3. Footer Đăng nhập (Chỉ hiển thị ở Bước 1) */}
       {currentStep === 1 && (
-        <div className="mt-8 text-center text-xs text-secondary tracking-wide">
+        <div className="mt-8 text-center text-xs text-zinc-600 tracking-wide">
           Bạn đã có tài khoản?{" "}
           <Link
             href="/login"
-            className="text-primary font-bold hover:underline ml-1"
+            className="text-zinc-900 font-bold hover:underline ml-1"
           >
             Đăng nhập ngay
           </Link>

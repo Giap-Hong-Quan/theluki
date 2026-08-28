@@ -32,7 +32,7 @@ export const useProducts = (params?: GetProductsParams) => {
   return useQuery({
     queryKey: PRODUCT_KEYS.list(params),
     queryFn: () => productService.getProducts(params),
-    select: (res) => res?.data?.products || [],
+    select: (res) => res?.data,
     staleTime: 5 * 60 * 1000,
   });
 };

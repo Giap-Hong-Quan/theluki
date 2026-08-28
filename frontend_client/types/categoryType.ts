@@ -2,7 +2,6 @@ export interface ICategory {
   _id: string;
   name: string;
   slug: string;
-  parent?: string | ICategory | null;
   image?: string | null;
   order?: number;
   isActive?: boolean;
@@ -16,7 +15,6 @@ export interface GetCategoriesParams {
   page?: number;
   sizePage?: number;
   search?: string;
-  parent?: string;
   isActive?: boolean;
   isDeleted?: boolean;
 }

@@ -80,6 +80,32 @@ const productRouter = express.Router();
  *                 items:
  *                   type: string
  *                 example: ["https://example.com/img1.jpg"]
+ *               weight:
+ *                 type: number
+ *                 description: Trọng lượng sản phẩm (gram), dùng để tính phí vận chuyển
+ *                 example: 300
+ *               isFeatured:
+ *                 type: boolean
+ *                 description: Đánh dấu sản phẩm nổi bật
+ *                 example: false
+ *               isActive:
+ *                 type: boolean
+ *                 description: Trạng thái hiển thị sản phẩm
+ *                 example: true
+ *               seo:
+ *                 type: object
+ *                 properties:
+ *                   metaTitle:
+ *                     type: string
+ *                     example: "Áo Hoodie Zip STORMSTU - Thời Trang Unisex"
+ *                   metaDescription:
+ *                     type: string
+ *                     example: "Áo nỉ bông 2 lớp unisex form rộng chất lượng cao, giữ ấm cực tốt."
+ *                   metaKeywords:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                     example: ["hoodie", "stormstu", "ao khoac", "unisex"]
  *               variants:
  *                 type: array
  *                 items:
@@ -103,6 +129,8 @@ const productRouter = express.Router();
  *         description: Danh mục hoặc Bộ sưu tập không tồn tại
  *       409:
  *         description: Tên sản phẩm hoặc mã SKU đã tồn tại
+ *       500:
+ *         description: Lỗi máy chủ nội bộ
  */
 productRouter.post("/", validate(createProductZod), verifyToken, authorizeRoles("admin", "staff"), createProductController);
 
