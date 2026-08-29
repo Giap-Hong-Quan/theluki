@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  backend:
+    image: ghcr.io/${GH_REPO_OWNER}/backend:latest
+    container_name: shop_backend
+    restart: always
+    environment:
+      - PORT=8000
+      - NODE_ENV=production
+      - MONGODBATLAS=${MONGODBATLAS}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - VIETTELPOST_BASE_URL=${VIETTELPOST_BASE_URL}
+      - VIETTELPOST_USERNAME=${VIETTELPOST_USERNAME}
+      - VIETTELPOST_PASSWORD=${VIETTELPOST_PASSWORD}
+      - SENDER_PROVINCE=${SENDER_PROVINCE}
+      - SENDER_WARD=${SENDER_WARD}
+      - VIETTELPOST_TOKEN=${VIETTELPOST_TOKEN}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  frontend_client:
+    image: ghcr.io/${GH_REPO_OWNER}/frontend_client:latest
+    container_name: shop_client
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://api.theluki.click/api
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - backend
+
+  frontend_admin:
+    image: ghcr.io/${GH_REPO_OWNER}/frontend_admin:latest
+    container_name: shop_admin
+    restart: always
+    ports:
+      - "127.0.0.1:3001:80"
+    depends_on:
+      - backend

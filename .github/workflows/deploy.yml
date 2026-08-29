@@ -1,0 +1,116 @@
+name: CI/CD Deploy to VPS
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set lower case owner name
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
+
+      - name: Build & Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ghcr.io/${{ env.OWNER_LC }}/backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Frontend Client Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend_client
+          push: true
+          tags: ghcr.io/${{ env.OWNER_LC }}/frontend_client:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & Push Frontend Admin Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend_admin
+          push: true
+          tags: ghcr.io/${{ env.OWNER_LC }}/frontend_admin:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo to copy compose file
+        uses: actions/checkout@v4
+
+      - name: Set lower case owner name
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
+
+      - name: Copy docker-compose.prod.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "/home/theluki/theluki"
+
+      - name: Deploy on VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: OWNER_LC
+          script: |
+            cd /home/theluki/theluki
+            
+            # Export biến môi trường cho Docker Compose
+            export GH_REPO_OWNER="${OWNER_LC}"
+            export MONGODBATLAS="${{ secrets.MONGODBATLAS }}"
+            export JWT_ACCESS_SECRET="${{ secrets.JWT_ACCESS_SECRET }}"
+            export JWT_REFRESH_SECRET="${{ secrets.JWT_REFRESH_SECRET }}"
+            export RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}"
+            export VIETTELPOST_BASE_URL="${{ secrets.VIETTELPOST_BASE_URL }}"
+            export VIETTELPOST_USERNAME="${{ secrets.VIETTELPOST_USERNAME }}"
+            export VIETTELPOST_PASSWORD="${{ secrets.VIETTELPOST_PASSWORD }}"
+            export SENDER_PROVINCE="${{ secrets.SENDER_PROVINCE }}"
+            export SENDER_WARD="${{ secrets.SENDER_WARD }}"
+            export VIETTELPOST_TOKEN="${{ secrets.VIETTELPOST_TOKEN }}"
+            export GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}"
+            export GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}"
+
+            # Đăng nhập GHCR trên VPS
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Kéo images mới nhất và khởi chạy
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            
+            # Xóa các image cũ để tiết kiệm ổ cứng
+            docker image prune -f
