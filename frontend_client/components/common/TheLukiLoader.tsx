@@ -4,9 +4,13 @@ import React from "react";
 
 interface TheLukiLoaderProps {
   fullScreen?: boolean;
+  text?: string;
 }
 
-export default function TheLukiLoader({ fullScreen = true }: TheLukiLoaderProps) {
+export default function TheLukiLoader({ 
+  fullScreen = true,
+  text
+}: TheLukiLoaderProps) {
   const content = (
     <div className="relative select-none flex flex-col items-center justify-center p-6">
       {/* Khối chữ THE LUKI lớn với hiệu ứng quét ánh sáng Liquid Metallic Shimmer */}
@@ -29,6 +33,13 @@ export default function TheLukiLoader({ fullScreen = true }: TheLukiLoaderProps)
       <div className="w-24 sm:w-36 h-[3px] bg-neutral-100 rounded-full mt-4 sm:mt-6 overflow-hidden">
         <div className="h-full bg-neutral-900 rounded-full the-luki-bar" />
       </div>
+
+      {/* Dòng chữ phụ (nếu có) */}
+      {text && (
+        <p className="mt-3 text-[11px] font-medium tracking-[0.2em] uppercase text-neutral-400 animate-pulse">
+          {text}
+        </p>
+      )}
 
       <style jsx>{`
         .the-luki-text {
