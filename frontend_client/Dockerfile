@@ -16,7 +16,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_API_URL=https://api.theluki.click/api
-
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=841844679205-6bhpdp1cpu7elsuqs1i8q22iju5cqunb.apps.googleusercontent.com
 RUN npm run build
 
 # 4. Runner
