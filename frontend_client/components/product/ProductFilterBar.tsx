@@ -78,13 +78,13 @@ export default function ProductFilterBar({ totalProducts = 0 }: ProductFilterBar
     });
   };
 
-  // Hiển thị text giá đang lọc
+  // Kiểm tra xem có đang lọc giá thực tế hay không
   const hasPriceFilter = currentMinPrice !== "" || currentMaxPrice !== "";
   const filterLabel = hasPriceFilter
     ? `${currentMinPrice ? formatPrice(Number(currentMinPrice)) : "0₫"} — ${
         currentMaxPrice ? formatPrice(Number(currentMaxPrice)) : "Tối đa"
       }`
-    : "290.000₫ — 2.400.000₫";
+    : "";
 
   return (
     <div className="w-full flex flex-col">
@@ -136,36 +136,38 @@ export default function ProductFilterBar({ totalProducts = 0 }: ProductFilterBar
         </div>
       </div>
 
-      {/* 2. HÀNG HIỂN THỊ TRẠNG THÁI "ĐANG LỌC" */}
-      <div className="w-full flex items-center justify-between py-2 text-xs">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 font-mono">
-            ĐANG LỌC:
-          </span>
+      {/* 2. HÀNG HIỂN THỊ TRẠNG THÁI "ĐANG LỌC" (CHỈ HIỆN KHI NGƯỜI DÙNG CÓ LỌC GIÁ) */}
+      {hasPriceFilter && (
+        <div className="w-full flex items-center justify-between py-2.5 text-xs animate-in fade-in duration-200">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 font-mono">
+              ĐANG LỌC:
+            </span>
 
-          {/* Tag khoảng giá đang lọc */}
-          <div className="flex items-center gap-1.5 border border-zinc-900 bg-white px-2 py-0.5 text-[10px] sm:text-[11px] text-zinc-900 font-mono rounded-none">
-            <span>{filterLabel}</span>
-            <button
-              type="button"
-              onClick={handleClearPriceFilter}
-              className="text-zinc-400 hover:text-zinc-900 cursor-pointer ml-0.5 leading-none flex items-center"
-              title="Xóa lọc giá"
-            >
-              <X className="w-2.5 h-2.5" />
-            </button>
+            {/* Tag khoảng giá đang lọc */}
+            <div className="flex items-center gap-1.5 border border-zinc-900 bg-white px-2.5 py-1 text-[10px] sm:text-[11px] text-zinc-900 font-mono rounded-none shadow-sm">
+              <span>{filterLabel}</span>
+              <button
+                type="button"
+                onClick={handleClearPriceFilter}
+                className="text-zinc-400 hover:text-zinc-900 cursor-pointer ml-1 leading-none flex items-center"
+                title="Xóa lọc giá"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Nút Xoá tất cả bên phải */}
-        <button
-          type="button"
-          onClick={handleClearPriceFilter}
-          className="text-[10px] sm:text-[11px] text-[#A3663A] hover:underline cursor-pointer font-medium whitespace-nowrap"
-        >
-          Xoá tất cả
-        </button>
-      </div>
+          {/* Nút Xoá tất cả bên phải */}
+          <button
+            type="button"
+            onClick={handleClearPriceFilter}
+            className="text-[10px] sm:text-[11px] text-[#A3663A] hover:underline cursor-pointer font-medium whitespace-nowrap uppercase tracking-wider"
+          >
+            Xoá tất cả
+          </button>
+        </div>
+      )}
     </div>
   );
 }

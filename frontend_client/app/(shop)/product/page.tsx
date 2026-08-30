@@ -7,6 +7,7 @@ import CategoryTabs from "@/components/product/CategoryTabs";
 import ProductFilterBar from "@/components/product/ProductFilterBar";
 import ProductCard from "@/components/product/ProductCard";
 import ProductCardSkeleton from "@/components/product/ProductCardSkeleton";
+import Pagination from "@/components/common/Pagination";
 import { useProducts } from "@/hooks/useProduct";
 
 const PAGE_SIZE = 20;
@@ -69,11 +70,20 @@ function ProductPageContent() {
           ))}
         </div>
       ) : products.length > 0 ? (
-        <div className="w-full mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map((prod) => (
-            <ProductCard key={prod._id} product={prod} />
-          ))}
-        </div>
+        <>
+          <div className="w-full mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {products.map((prod) => (
+              <ProductCard key={prod._id} product={prod} />
+            ))}
+          </div>
+
+          {/* Thanh phân trang Pagination */}
+          <Pagination
+            currentPage={page}
+            totalItems={totalProduct}
+            pageSize={PAGE_SIZE}
+          />
+        </>
       ) : (
         <div className="w-full py-16 text-center text-zinc-400 font-mono text-sm">
           Không tìm thấy sản phẩm nào phù hợp với bộ lọc.

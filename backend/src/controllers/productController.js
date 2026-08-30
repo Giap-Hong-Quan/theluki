@@ -156,10 +156,13 @@ export const getAllProductsController = async (req, res, next) => {
         }
 
         // Lọc theo Khoảng giá (minPrice - maxPrice)
-        if (typeof minPrice === "number" || typeof maxPrice === "number") {
+        const parsedMin = minPrice !== undefined && minPrice !== null && minPrice !== "" && !isNaN(Number(minPrice)) ? Number(minPrice) : null;
+        const parsedMax = maxPrice !== undefined && maxPrice !== null && maxPrice !== "" && !isNaN(Number(maxPrice)) ? Number(maxPrice) : null;
+
+        if (parsedMin !== null || parsedMax !== null) {
             query.price = {};
-            if (typeof minPrice === "number") query.price.$gte = minPrice;
-            if (typeof maxPrice === "number") query.price.$lte = maxPrice;
+            if (parsedMin !== null) query.price.$gte = parsedMin;
+            if (parsedMax !== null) query.price.$lte = parsedMax;
         }
 
         // Lọc tìm kiếm theo Tên (có dấu / không dấu) hoặc Mã SKU

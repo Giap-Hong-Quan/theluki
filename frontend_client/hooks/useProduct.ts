@@ -7,6 +7,8 @@ export const PRODUCT_KEYS = {
   list: (params?: GetProductsParams) => [...PRODUCT_KEYS.all, "list", params] as const,
   byCategorySlug: (categorySlug: string, params?: Omit<GetProductsParams, "category">) =>
     [...PRODUCT_KEYS.all, "byCategorySlug", categorySlug, params] as const,
+  byCollectionSlug: (collectionSlug: string, params?: Omit<GetProductsParams, "collection">) =>
+    [...PRODUCT_KEYS.all, "byCollectionSlug", collectionSlug, params] as const,
 };
 
 /**
@@ -22,6 +24,28 @@ export const useProductsByCategorySlug = (
     select: (res) => res?.data?.products || [],
     enabled: !!categorySlug,
     staleTime: 5 * 60 * 1000, // Cache 5 phút
+  });
+};
+
+/**
+ * Hook lấy danh sách sản phẩm theo Slug bộ sưu tập (Collection)
+ */
+export const useProductsByCollection = (
+  collectionSlug: string,
+  params?: Omit<GetProductsParams, "collection">
+) => {
+  return useQuery({
+    queryKey: PRODUCT_KEYS.byCollectionSlug(collectionSlug, params),
+    queryFn: () =>
+      productService.getProducts({
+        ...params,
+        collection: collectionSlug,
+        isActive: true,
+        isDeleted: false,
+      }),
+    select: (res) => res?.data,
+    enabled: !!collectionSlug,
+    staleTime: 5 * 60 * 1000,
   });
 };
 
