@@ -12,7 +12,7 @@ import { loginSchema, LoginFormData } from "@/validators/auth.validator";
 import { useLogin, useGoogleAuth } from "@/hooks/useAuth";
 import { authService } from "@/services/authService";
 import { useGoogleLogin } from "@react-oauth/google";
-import CapybaraLoader from "@/src/components/common/CapybaraLoader";
+import TheLukiLoader from "@/components/common/TheLukiLoader";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -68,7 +68,7 @@ export default function LoginPage() {
       {/* Overlay loader when login or Google auth is pending */}
       {(loginMutation.isPending || googleAuthMutation.isPending) && (
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md transition-all duration-300">
-          <CapybaraLoader />
+          <TheLukiLoader text="Đang đăng nhập..." />
           <p className="mt-4 text-sm font-semibold tracking-widest text-white uppercase animate-pulse">
             Đang xử lý đăng nhập...
           </p>

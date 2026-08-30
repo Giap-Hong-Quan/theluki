@@ -18,7 +18,7 @@ import { useCollections } from "@/hooks/useCollection";
 import { useCategories } from "@/hooks/useCategory";
 import { USER_MENU_ITEMS, INTRODUCE_LINKS } from "@/contants/navigation";
 import SearchDrawer from "./SearchDrawer";
-import CapybaraLoader from "@/src/components/common/CapybaraLoader";
+import TheLukiLoader from "@/components/common/TheLukiLoader";
 
 interface DecodedToken {
   id?: string;
@@ -102,7 +102,7 @@ export default function Header() {
       {/* Overlay loader khi đang xử lý đăng xuất */}
       {logoutMutation.isPending && (
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md transition-all duration-300">
-          <CapybaraLoader />
+          <TheLukiLoader text="Đang xử lý..." />
           <p className="mt-4 text-sm font-semibold tracking-widest text-white uppercase animate-pulse">
             Đang đăng xuất...
           </p>
