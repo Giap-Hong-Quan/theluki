@@ -6,6 +6,7 @@ import categoryRouter from "./categoryRouter.js";
 import productRouter from "./productRouter.js";
 import cartRouter from "./cartRouter.js";
 import orderRouter from "./orderRouter.js";
+import bannerRouter from "./bannerRouter.js";
 
 const router = express.Router();
 router.use("/auth", authRouter);
@@ -15,5 +16,6 @@ router.use("/category", categoryRouter);
 router.use("/product", productRouter);
 router.use("/cart", cartRouter);
 router.use("/order", orderRouter);
+router.use("/banner", bannerRouter);
 
 export default router;

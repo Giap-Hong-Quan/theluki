@@ -20,6 +20,12 @@ export interface NavLinkItem {
   title: string;
 }
 
+export interface PriceRangeTag {
+  label: string;
+  minPrice?: number;
+  maxPrice?: number;
+}
+
 // 1. Danh sách menu tài khoản người dùng
 export const USER_MENU_ITEMS: UserMenuItem[] = [
   {
@@ -63,24 +69,15 @@ export const INTRODUCE_LINKS: NavLinkItem[] = [
   { href: "/introduce/faq", title: "FAQ" },
 ];
 
-// 3. Danh sách từ khóa tìm kiếm phổ biến trong SearchDrawer
-export const POPULAR_SEARCH_TAGS: string[] = [
-  "Áo thun basic",
-  "Áo sơ mi lụa",
-  "Quần jean ống rộng",
-  "Chân váy chữ A",
-  "Summer 2026",
-  "Áo khoác Blazer",
+// 3. Danh sách các khoảng giá phổ biến cho Search Drawer
+export const POPULAR_PRICE_RANGES: PriceRangeTag[] = [
+  { label: "Dưới 300.000₫", maxPrice: 300000 },
+  { label: "300.000₫ — 500.000₫", minPrice: 300000, maxPrice: 500000 },
+  { label: "500.000₫ — 800.000₫", minPrice: 500000, maxPrice: 800000 },
+  { label: "Trên 800.000₫", minPrice: 800000 },
 ];
 
-// 4. Danh mục nổi bật gợi ý trong SearchDrawer
-export const FEATURED_SEARCH_CATEGORIES = [
-  { href: "/product?category=ao", title: "Áo nữ THE LUKI" },
-  { href: "/product?category=quan", title: "Quần thời trang" },
-  { href: "/product?category=dam", title: "Đầm & Váy thiết kế" },
-];
-
-// 5. Cấu hình các cột liên kết trong Footer
+// 4. Cấu hình các cột liên kết trong Footer
 export const FOOTER_SECTIONS = [
   {
     title: "Sản phẩm & Bộ sưu tập",
@@ -114,4 +111,3 @@ export const FOOTER_SECTIONS = [
     ],
   },
 ];
-
