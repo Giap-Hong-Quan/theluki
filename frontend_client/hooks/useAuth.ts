@@ -1,43 +1,66 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authService } from "@/services/authService";
 import { LoginFormData } from "@/validators/auth.validator";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { SignupPayload } from "@/types/authType";
+import { SignupPayload, UserProfile } from "@/types/authType";
+import { getCookie } from "@/lib/axios-client";
+
+// Lấy thông tin Profile người dùng hiện tại
+export const useProfile = () => {
+  return useQuery<UserProfile | null>({
+    queryKey: ["userProfile"],
+    queryFn: async () => {
+      const res = await authService.getProfile();
+      return res?.profile || null;
+    },
+    enabled: typeof window !== "undefined" && !!getCookie("accessToken"),
+    staleTime: 1000 * 60 * 5, // Cache 5 phút trong RAM
+    retry: false,
+  });
+};
+
 // đăng nhập
-export const useLogin =()=> {
-    const router = useRouter();
-    return useMutation({
+export const useLogin = () => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: (data: LoginFormData) => authService.signin(data),
     onSuccess: (res) => {
-        // Lưu token vào Cookie
-        if (res?.data?.accessToken) {
-            document.cookie = `accessToken=${res.data.accessToken}; path=/; max-age=604800; SameSite=Lax`;
-        }
-        toast.success(res?.message || "Đăng nhập thành công!");
-        router.push("/");
+      // Lưu token vào Cookie
+      if (res?.data?.accessToken) {
+        document.cookie = `accessToken=${res.data.accessToken}; path=/; max-age=604800; SameSite=Lax`;
+      }
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      toast.success(res?.message || "Đăng nhập thành công!");
+      router.push("/");
     },
-    onError: (error:any) => {
-       toast.error(error?.message || "Đăng nhập thất bại, vui lòng thử lại!");
+    onError: (error: any) => {
+      toast.error(error?.message || "Đăng nhập thất bại, vui lòng thử lại!");
     },
-})
-}   
+  });
+};
 
 // Đăng xuất
 export const useLogout = () => {
-    const router = useRouter();
-    return useMutation({
-        mutationFn: () => authService.logout(),
-        onSuccess: () => {
-            document.cookie = "accessToken=; path=/; max-age=0; SameSite=Lax";
-            toast.success("Đăng xuất thành công!");
-            router.push("/login");
-        },
-        onError: () => {
-            document.cookie = "accessToken=; path=/; max-age=0; SameSite=Lax";
-            router.push("/login");
-        }
-    });
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => authService.logout(),
+    onSuccess: () => {
+      document.cookie = "accessToken=; path=/; max-age=0; SameSite=Lax";
+      queryClient.setQueryData(["userProfile"], null);
+      queryClient.removeQueries({ queryKey: ["userProfile"] });
+      toast.success("Đăng xuất thành công!");
+      router.push("/login");
+    },
+    onError: () => {
+      document.cookie = "accessToken=; path=/; max-age=0; SameSite=Lax";
+      queryClient.setQueryData(["userProfile"], null);
+      queryClient.removeQueries({ queryKey: ["userProfile"] });
+      router.push("/login");
+    },
+  });
 };
 
 // đăng ký 
@@ -85,12 +108,14 @@ export const useSendOtp = () => {
 // Đăng nhập Google
 export const useGoogleAuth = () => {
     const router = useRouter();
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (token: string) => authService.googleLogin(token),
         onSuccess: (res: any) => {
             if (res?.data?.accessToken) {
                 document.cookie = `accessToken=${res.data.accessToken}; path=/; max-age=604800; SameSite=Lax`;
             }
+            queryClient.invalidateQueries({ queryKey: ["userProfile"] });
             toast.success(res?.message || "Đăng nhập Google thành công!");
             router.push("/");
         },
@@ -103,12 +128,14 @@ export const useGoogleAuth = () => {
 // Đăng nhập Facebook
 export const useFacebookAuth = () => {
     const router = useRouter();
+    const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (token: string) => authService.facebookLogin(token),
         onSuccess: (res: any) => {
             if (res?.data?.accessToken) {
                 document.cookie = `accessToken=${res.data.accessToken}; path=/; max-age=604800; SameSite=Lax`;
             }
+            queryClient.invalidateQueries({ queryKey: ["userProfile"] });
             toast.success(res?.message || "Đăng nhập Facebook thành công!");
             router.push("/");
         },

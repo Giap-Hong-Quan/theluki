@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { jwtDecode } from "jwt-decode";
 import {
   Search,
   User,
@@ -13,24 +12,18 @@ import {
   LogOut,
   ShoppingBag,
 } from "lucide-react";
-import { useLogout } from "@/hooks/useAuth";
+import { useLogout, useProfile } from "@/hooks/useAuth";
 import { useCollections } from "@/hooks/useCollection";
 import { useCategories } from "@/hooks/useCategory";
 import { USER_MENU_ITEMS, INTRODUCE_LINKS } from "@/contants/navigation";
 import SearchDrawer from "./SearchDrawer";
 import TheLukiLoader from "@/components/common/TheLukiLoader";
 
-interface DecodedToken {
-  id?: string;
-  role?: string;
-  name?: string;
-  email?: string;
-}
-
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const logoutMutation = useLogout();
+  const { data: userProfile } = useProfile();
 
   // Lấy danh sách bộ sưu tập từ Backend
   const { data: collections = [], isLoading: isCollectionsLoading } = useCollections({
@@ -46,7 +39,6 @@ export default function Header() {
   });
 
   // State
-  const [currentUser, setCurrentUser] = useState<DecodedToken | null>(null);
   const [cartCount, setCartCount] = useState<number>(1);
   const [isSearchDrawerOpen, setIsSearchDrawerOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -54,29 +46,6 @@ export default function Header() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
-
-  // Đọc token từ Cookie
-  useEffect(() => {
-    function getCookie(name: string): string | null {
-      if (typeof document === "undefined") return null;
-      const match = document.cookie.match(
-        new RegExp("(^| )" + name + "=([^;]+)")
-      );
-      return match ? decodeURIComponent(match[2]) : null;
-    }
-
-    const token = getCookie("accessToken");
-    if (token) {
-      try {
-        const decoded = jwtDecode<DecodedToken>(token);
-        setCurrentUser(decoded);
-      } catch {
-        setCurrentUser(null);
-      }
-    } else {
-      setCurrentUser(null);
-    }
-  }, [pathname]);
 
   // Click outside to close user menu
   useEffect(() => {
@@ -320,18 +289,26 @@ export default function Header() {
               </Link>
 
               {/* Nút User Pill (Vuông vức, sắc sảo) */}
-              {currentUser ? (
+              {userProfile ? (
                 <div className="relative" ref={userMenuRef}>
                   <button
                     type="button"
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-2 h-9 px-3.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold rounded-none transition-all cursor-pointer shadow-sm border border-zinc-700 active:scale-[0.98]"
                   >
-                    <div className="w-5 h-5 rounded-none bg-zinc-800 flex items-center justify-center">
-                      <User className="w-3.5 h-3.5 text-zinc-300" />
+                    <div className="w-5 h-5 rounded-none bg-zinc-800 flex items-center justify-center overflow-hidden">
+                      {userProfile.avatar ? (
+                        <img
+                          src={userProfile.avatar}
+                          alt={userProfile.full_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-3.5 h-3.5 text-zinc-300" />
+                      )}
                     </div>
                     <span className="max-w-[110px] truncate tracking-wider uppercase text-[11px] font-bold">
-                      {currentUser.name || "Quan Giap"}
+                      {userProfile.full_name || userProfile.email?.split("@")[0] || "Tài khoản"}
                     </span>
                     <ChevronDown className="w-3 h-3 text-zinc-400" />
                   </button>

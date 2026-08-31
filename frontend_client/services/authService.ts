@@ -1,6 +1,13 @@
 import axiosClient from "@/lib/axios-client";
 import { API_ENDPOINTS } from "@/contants/api-endpoint";
-import { SigninPayload, SignupPayload, LoginResponse,RegisterResponse } from "@/types/authType";
+import {
+  SigninPayload,
+  SignupPayload,
+  LoginResponse,
+  RegisterResponse,
+  ProfileResponse,
+} from "@/types/authType";
+
 export const authService = {
   // Đăng nhập
   signin: (payload: SigninPayload): Promise<LoginResponse> => {
@@ -23,7 +30,7 @@ export const authService = {
   },
 
   // Lấy thông tin cá nhân hiện tại
-  getProfile: (): Promise<any> => {
+  getProfile: (): Promise<ProfileResponse> => {
     return axiosClient.get(API_ENDPOINTS.AUTH.PROFILE);
   },
 

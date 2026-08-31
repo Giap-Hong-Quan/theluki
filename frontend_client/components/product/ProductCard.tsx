@@ -83,7 +83,7 @@ export default function ProductCard({ product: propProduct }: ProductCardProps) 
           {/* Tên sản phẩm */}
           <Link
             href={`/product/${product.slug}`}
-            className="block text-xs sm:text-sm font-medium text-zinc-900 hover:text-[#A3663A] line-clamp-1 transition-colors"
+            className="block text-xs truncate sm:text-sm font-medium text-zinc-900 hover:text-[#A3663A] line-clamp-1 transition-colors"
             title={product.name}
           >
             {product.name}
