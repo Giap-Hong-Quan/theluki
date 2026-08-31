@@ -98,10 +98,12 @@ export default function Header() {
                 )}
               </button>
 
-              <Link href="/" className="inline-block">
-                <span className="text-xl sm:text-2xl font-black tracking-[0.25em] text-zinc-900 uppercase font-mono select-none">
-                  THE LUKI
-                </span>
+              <Link href="/" className="inline-flex items-center">
+                <img
+                  src="/logo.png"
+                  alt="THE LUKI Logo"
+                  className="h-8 sm:h-9 w-auto object-contain select-none"
+                />
               </Link>
             </div>
 

@@ -11,10 +11,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
           {/* ================= CỘT 1: THƯƠNG HIỆU & LIÊN HỆ ================= */}
           <div className="lg:col-span-4 space-y-3.5">
-            <Link href="/" className="inline-block">
-              <span className="text-xl sm:text-2xl font-black tracking-[0.2em] text-zinc-900 uppercase font-mono">
-                THE LUKI
-              </span>
+            <Link href="/" className="inline-flex items-center">
+              <img
+                src="/logo.png"
+                alt="THE LUKI Logo"
+                className="h-8 sm:h-9 w-auto object-contain select-none"
+              />
             </Link>
 
             <p className="text-xs text-zinc-500 leading-relaxed pr-2">

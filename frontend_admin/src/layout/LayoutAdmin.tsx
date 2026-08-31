@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { authService } from "../service/auth";
 import { jwtDecode } from "jwt-decode";
+import logoImg from "../assets/image/logo.png";
 
 interface JwtPayload {
   id?: string;
@@ -91,9 +92,11 @@ export default function LayoutAdmin() {
         <div className="flex h-16 items-center justify-between px-4 border-b border-zinc-800">
           {!collapsed && (
             <Link to="/" className="flex items-center gap-2">
-              <span className="text-lg font-black tracking-[0.2em] text-white font-mono uppercase">
-                THE LUKI
-              </span>
+              <img
+                src={logoImg}
+                alt="THE LUKI"
+                className="h-6 w-auto object-contain brightness-0 invert"
+              />
               <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 bg-zinc-800 text-zinc-400 border border-zinc-700 font-semibold rounded">
                 Admin
               </span>

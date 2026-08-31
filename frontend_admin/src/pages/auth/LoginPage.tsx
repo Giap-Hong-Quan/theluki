@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lock, Mail, Eye, EyeOff, ShieldCheck, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { authService } from "../../service/auth";
+import logoImg from "../../assets/image/logo.png";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -37,74 +39,65 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-zinc-950 text-zinc-100 px-4 py-8">
-      {/* Background Subtle Gradient Glow */}
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-800/20 via-zinc-950 to-zinc-950"></div>
-
-      <div className="relative w-full max-w-md bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 p-8 sm:p-10 rounded-3xl shadow-2xl space-y-8">
+    <div className="min-h-screen w-screen flex items-center justify-center bg-zinc-100/70 text-zinc-900 px-4 py-12 font-sans">
+      {/* Main Login Card */}
+      <div className="relative w-full max-w-[440px] bg-white border border-zinc-200/90 p-8 sm:p-12 shadow-sm space-y-8 rounded-none">
+        
         {/* Header Branding */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-zinc-800 border border-zinc-700 text-white mb-2 shadow-inner">
-            <ShieldCheck className="w-6 h-6 text-zinc-300" />
-          </div>
-          <h1 className="text-2xl font-black tracking-[0.2em] uppercase font-mono text-white">
-            THE LUKI
-          </h1>
-          <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">
+        <div className="flex flex-col items-center justify-center text-center space-y-2.5">
+          <img
+            src={logoImg}
+            alt="THE LUKI Logo"
+            className="h-10 sm:h-12 w-auto object-contain"
+          />
+          <p className="text-xs text-zinc-500 font-normal tracking-wide">
             Cổng Quản Trị Hệ Thống
           </p>
         </div>
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium animate-in fade-in duration-200">
+          <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs font-medium animate-in fade-in duration-200">
             {errorMsg}
           </div>
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email Field */}
-          <div className="space-y-1.5 text-left">
-            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-              Email Quản Trị
+          <div className="space-y-2 text-left">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-800">
+              EMAIL
             </label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-3.5 flex items-center text-zinc-500">
-                <Mail className="w-4 h-4" />
-              </span>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@theluki.vn"
-                className="w-full h-11 pl-10 pr-4 bg-zinc-800/60 border border-zinc-700/80 rounded-xl text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 transition-colors"
-              />
-            </div>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@example.com"
+              className="w-full h-11 px-3.5 bg-white border border-zinc-300 text-sm text-zinc-900 placeholder:text-zinc-400 rounded-none focus:outline-none focus:border-zinc-900 transition-colors"
+            />
           </div>
 
           {/* Password Field */}
-          <div className="space-y-1.5 text-left">
-            <label className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-              Mật Khẩu
+          <div className="space-y-2 text-left">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-800">
+              MẬT KHẨU
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-3.5 flex items-center text-zinc-500">
-                <Lock className="w-4 h-4" />
-              </span>
               <input
                 type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full h-11 pl-10 pr-10 bg-zinc-800/60 border border-zinc-700/80 rounded-xl text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-zinc-400 focus:ring-1 focus:ring-zinc-400 transition-colors"
+                className="w-full h-11 pl-3.5 pr-10 bg-white border border-zinc-300 text-sm text-zinc-900 placeholder:text-zinc-400 rounded-none focus:outline-none focus:border-zinc-900 transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-3.5 flex items-center text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                className="absolute inset-y-0 right-3 flex items-center text-zinc-400 hover:text-zinc-700 transition-colors cursor-pointer"
+                title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
                 {showPassword ? (
                   <EyeOff className="w-4 h-4" />
@@ -115,26 +108,43 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Extra options: Remember me & Note */}
+          <div className="flex items-center justify-between text-xs text-zinc-600 pt-1">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 accent-zinc-900 rounded-none cursor-pointer"
+              />
+              <span className="text-[12px] text-zinc-600">Ghi nhớ đăng nhập</span>
+            </label>
+
+            <span className="text-[12px] text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer">
+              Quên mật khẩu?
+            </span>
+          </div>
+
           {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 bg-white hover:bg-zinc-200 text-zinc-950 font-bold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50 active:scale-[0.98]"
+            className="w-full h-11 bg-zinc-900 hover:bg-black text-white font-bold text-xs uppercase tracking-[0.2em] rounded-none transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-[0.99] shadow-sm"
           >
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Đang xác thực...</span>
+                <span>Đang xử lý...</span>
               </>
             ) : (
-              <span>ĐĂNG NHẬP ADMIN</span>
+              <span>ĐĂNG NHẬP</span>
             )}
           </button>
         </form>
 
         {/* Footer Note */}
-        <p className="text-center text-[11px] text-zinc-500">
-          Chỉ dành riêng cho Quản trị viên và Nhân viên có thẩm quyền.
+        <p className="text-center text-[11px] text-zinc-400 tracking-wide pt-2">
+          Dành riêng cho Quản trị viên và Nhân viên THE LUKI
         </p>
       </div>
     </div>

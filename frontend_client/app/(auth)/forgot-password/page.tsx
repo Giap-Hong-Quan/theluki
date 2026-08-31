@@ -143,11 +143,13 @@ export default function ForgotPasswordPage() {
   return (
     <div className="w-full bg-white border border-zinc-200 p-8 sm:p-10 shadow-sm rounded-none transition-colors duration-200">
       {/* 1. Header / Logo Branding */}
-      <div className="text-center mb-8">
-        <Link href="/" className="inline-block mb-3">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-[0.25em] text-zinc-900 uppercase">
-            THE LUKI
-          </h1>
+      <div className="flex flex-col items-center justify-center text-center mb-8">
+        <Link href="/" className="inline-flex items-center justify-center mb-3">
+          <img
+            src="/logo.png"
+            alt="THE LUKI Logo"
+            className="h-10 sm:h-12 w-auto object-contain"
+          />
         </Link>
         <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 mt-1">
           {currentStep === 1 && "Quên mật khẩu?"}
