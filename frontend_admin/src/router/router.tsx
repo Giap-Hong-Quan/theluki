@@ -1,12 +1,12 @@
 import { createBrowserRouter } from "react-router-dom";
-import SigninPage from "../pages/auth/SigninPage";
+import SigninPage from "../pages/auth/LoginPage";
 import LayoutAdmin from "../layout/LayoutAdmin";
 import RequireAuth from "../libs/RequireAuth";
 import DashboardPage from "../pages/admin/DashboardPage";
 
 const router = createBrowserRouter([
   {
-    path: "/signin",
+    path: "/login",
     element: <SigninPage />,
   },
   {

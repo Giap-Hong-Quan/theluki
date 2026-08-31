@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Lock, Mail, Eye, EyeOff, ShieldCheck, Loader2 } from "lucide-react";
 import { authService } from "../../service/auth";
 
-export default function SigninPage() {
+export default function LoginPage() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");

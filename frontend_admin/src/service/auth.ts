@@ -1,21 +1,11 @@
 import { apiClient } from "./apiclient";
 import type { PayloadLogin, LoginResponse } from "../types/authType";
+import { jwtDecode } from "jwt-decode";
 
-function decodeJwt(token: string): { id?: string; role?: string; date?: string } | null {
-  try {
-    const base64Url = token.split(".")[1];
-    if (!base64Url) return null;
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
+interface JwtPayload {
+  id?: string;
+  role?: string;
+  date?: string;
 }
 
 export const authService = {
@@ -29,8 +19,13 @@ export const authService = {
     }
 
     // Giải mã token để kiểm tra role
-    const decoded = decodeJwt(token);
-    const role = decoded?.role;
+    let role = "";
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      role = decoded.role || "";
+    } catch {
+      throw new Error("Token không hợp lệ.");
+    }
 
     // Kiểm tra role: Chỉ cho phép admin và staff đăng nhập vào Portal
     if (role !== "admin" && role !== "staff") {
@@ -38,20 +33,7 @@ export const authService = {
     }
 
     // Lưu token
-    localStorage.setItem("admin_token", token);
-    localStorage.setItem("astkn", token);
-
-    // Lấy thông tin chi tiết user
-    try {
-      const profileRes = await apiClient.get("/auth/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (profileRes?.data?.data) {
-        localStorage.setItem("admin_user", JSON.stringify(profileRes.data.data));
-      }
-    } catch {
-      localStorage.setItem("admin_user", JSON.stringify({ email: payload.email, role }));
-    }
+    localStorage.setItem("accessToken", token);
 
     return res.data;
   },
@@ -61,9 +43,7 @@ export const authService = {
     try {
       await apiClient.post("/auth/logout");
     } finally {
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("admin_user");
-      localStorage.removeItem("astkn");
+      localStorage.removeItem("accessToken");
     }
   },
 

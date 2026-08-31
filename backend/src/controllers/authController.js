@@ -61,16 +61,12 @@ export const signinController = async (req, res, next) => {
         if (!isMatch) {
             throw new ApiError(400, "Mật khẩu không chính xác");
         }
-        const newAccessToken = accessToken(
-            {
-                id: exitUser._id,
-                date: new Date(),
-                role: exitUser.role.name
-            }
-        );
+        const newAccessToken = accessToken({
+            id: exitUser._id,
+            role: exitUser.role.name
+        });
         const newRefreshToken = refreshToken({
             id: exitUser._id,
-            date: new Date(),
             role: exitUser.role.name
         });
         // Lưu Refresh Token vào HTTP-only Cookie
@@ -112,7 +108,6 @@ export const refreshTokenController = async (req, res, next) => {
         }
         const newAccessToken = accessToken({
             id: user._id,
-            date: new Date(),
             role: user.role.name
         });
 
@@ -319,13 +314,11 @@ export const loginWithGoogle = async (req, res, next) => {
         const roleName = user.role?.name || "user";
         const newAccessToken = accessToken({
             id: user._id,
-            date: new Date(),
             role: roleName,
         });
 
         const newRefreshToken = refreshToken({
             id: user._id,
-            date: new Date(),
             role: roleName,
         });
 

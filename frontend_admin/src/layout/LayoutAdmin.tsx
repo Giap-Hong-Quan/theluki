@@ -13,6 +13,12 @@ import {
   UserCheck,
 } from "lucide-react";
 import { authService } from "../service/auth";
+import { jwtDecode } from "jwt-decode";
+
+interface JwtPayload {
+  id?: string;
+  role?: string;
+}
 
 interface MenuItem {
   title: string;
@@ -58,11 +64,11 @@ export default function LayoutAdmin() {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
 
-  // Lấy thông tin admin từ localStorage
+  // Lấy role từ accessToken trong localStorage
   const adminUser = (() => {
     try {
-      const raw = localStorage.getItem("admin_user");
-      return raw ? JSON.parse(raw) : null;
+      const token = localStorage.getItem("accessToken");
+      return token ? jwtDecode<JwtPayload>(token) : null;
     } catch {
       return null;
     }
@@ -70,7 +76,7 @@ export default function LayoutAdmin() {
 
   const handleLogout = async () => {
     await authService.logoutAdmin();
-    navigate("/signin");
+    navigate("/login");
   };
 
   return (
@@ -146,11 +152,11 @@ export default function LayoutAdmin() {
 
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-zinc-200 truncate">
-                  {adminUser?.name || "Admin"}
+                <p className="text-xs font-bold text-zinc-200 truncate capitalize">
+                  {adminUser?.role || "Admin"}
                 </p>
                 <p className="text-[11px] text-zinc-400 truncate">
-                  {adminUser?.email || "admin@theluki.vn"}
+                  {adminUser?.role === "admin" ? "Quản trị viên" : "Nhân viên"}
                 </p>
               </div>
             )}
