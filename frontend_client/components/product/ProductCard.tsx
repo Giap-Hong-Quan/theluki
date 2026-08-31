@@ -1,20 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { IProduct } from "@/types/productType";
 import { formatPrice } from "@/utils/formatPrice";
+import { useToggleWishlist, useIsFavorite } from "@/hooks/useWishList";
 
 interface ProductCardProps {
   product?: Partial<IProduct> & {
     image?: string;
-    tag?: string; 
+    tag?: string;
   };
 }
 
 export default function ProductCard({ product: propProduct }: ProductCardProps) {
-  const [isLiked, setIsLiked] = useState(false);
+  const productId = propProduct?._id;
+  const isFavorite = useIsFavorite(productId);
+  const { mutate: toggleWishlist, isPending } = useToggleWishlist();
 
   // Dữ liệu mẫu (hoặc lấy từ props)
   const product = {
@@ -28,6 +31,14 @@ export default function ProductCard({ product: propProduct }: ProductCardProps) 
       propProduct?.image ||
       "https://theciu.vn/_next/image?url=https%3A%2F%2Fminio.theciu.vn%2Ftheciu-beta%2F350%2Fimages%2Fj5Ujcr9cQrxFp0Hz2X7nhA6q4fP9bhng956A5ykD.png%3Fv%3D58151&w=1920&q=75",
     tag: propProduct?.tag || "MỚI",
+  };
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (productId) {
+      toggleWishlist(productId);
+    }
   };
 
   return (
@@ -52,13 +63,14 @@ export default function ProductCard({ product: propProduct }: ProductCardProps) 
         {/* Nút Trái tim Wishlist ở góc trên bên phải */}
         <button
           type="button"
-          onClick={() => setIsLiked(!isLiked)}
-          className="absolute top-0 right-0 w-7 h-7 sm:w-7 sm:h-7 bg-white border border-black flex items-center justify-center cursor-pointer transition-colors hover:bg-zinc-50"
-          title="Yêu thích"
+          onClick={handleToggleFavorite}
+          disabled={isPending}
+          className="absolute top-0 right-0 w-7 h-7 sm:w-7 sm:h-7 bg-white border border-black flex items-center justify-center cursor-pointer transition-all hover:bg-zinc-50 active:scale-90 disabled:opacity-50"
+          title={isFavorite ? "Bỏ yêu thích" : "Thêm vào yêu thích"}
         >
           <Heart
             className={`w-3.5 h-3.5 transition-colors ${
-              isLiked ? "fill-red-500 text-red-500" : "text-black"
+              isFavorite ? "fill-red-500 text-red-500" : "text-black hover:text-red-500"
             }`}
             strokeWidth={1.5}
           />
@@ -79,7 +91,7 @@ export default function ProductCard({ product: propProduct }: ProductCardProps) 
 
           {/* Giá tiền */}
           <p className="text-sm sm:text-base font-bold text-zinc-900">
-           {formatPrice(product.price)}
+            {formatPrice(product.price)}
           </p>
         </div>
 

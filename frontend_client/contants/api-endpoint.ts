@@ -28,6 +28,16 @@ export const API_ENDPOINTS = {
     GET_BY_SLUG: (slug: string) => `/collection/slug/${slug}`,
     GET_BY_ID: (id: string) => `/collection/${id}`,
   },
+  WISHLIST: {
+    GET: "/wishlist",
+    TOGGLE: (productId: string) => `/wishlist/toggle/${productId}`,
+    REMOVE_ITEM: (productId: string) => `/wishlist/${productId}`,
+    CLEAR: "/wishlist",
+  },
+  BANNERS: {
+    GET_ALL: "/banner",
+    GET_BY_ID: (id: string) => `/banner/${id}`,
+  },
   CART: {
     GET: "/cart",
     ADD_ITEM: "/cart/items",
