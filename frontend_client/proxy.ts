@@ -6,7 +6,7 @@ import { ROUTE_CONFIG } from "./contants/routes";
 interface JwtPayload {
   id?: string;
   role?: string;
-  date?: string;
+  exp?: number;
 }
 
 export function proxy(request: NextRequest) {
@@ -22,7 +22,8 @@ export function proxy(request: NextRequest) {
   if (token) {
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      if (decoded && (decoded.id || decoded.role)) {
+      const isExpired = decoded.exp ? decoded.exp * 1000 < Date.now() : false;
+      if (decoded && (decoded.id || decoded.role) && !isExpired) {
         isTokenValid = true;
         userRole = decoded.role || null;
       }

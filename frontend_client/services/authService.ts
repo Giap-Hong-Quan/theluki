@@ -17,6 +17,11 @@ export const authService = {
     return axiosClient.post(API_ENDPOINTS.AUTH.LOGOUT);
   },
 
+  // Làm mới Access Token
+  refreshToken: (): Promise<{ success: boolean; data: { accessToken: string } }> => {
+    return axiosClient.post(API_ENDPOINTS.AUTH.REFRESH_TOKEN);
+  },
+
   // Lấy thông tin cá nhân hiện tại
   getProfile: (): Promise<any> => {
     return axiosClient.get(API_ENDPOINTS.AUTH.PROFILE);
