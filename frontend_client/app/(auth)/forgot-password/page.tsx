@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
 
       {/* ======================= BƯỚC 1: NHẬP EMAIL ======================= */}
       {currentStep === 1 && (
-        <form onSubmit={handleSubmitStep1(onSubmitStep1)} className="space-y-6">
+        <form onSubmit={handleSubmitStep1(onSubmitStep1)} autoComplete="off" className="space-y-6">
           <div>
             <label
               htmlFor="email"
@@ -182,7 +182,7 @@ export default function ForgotPasswordPage() {
               <input
                 id="email"
                 type="email"
-                autoComplete="email"
+                autoComplete="off"
                 autoFocus
                 {...registerStep1("email")}
                 placeholder="Nhập số điện thoại hoặc email của bạn"
@@ -313,7 +313,7 @@ export default function ForgotPasswordPage() {
 
       {/* ======================= BƯỚC 3: ĐẶT MẬT KHẨU MỚI ======================= */}
       {currentStep === 3 && (
-        <form onSubmit={handleSubmitStep3(onSubmitStep3)} className="space-y-5">
+        <form onSubmit={handleSubmitStep3(onSubmitStep3)} autoComplete="off" className="space-y-5">
           {/* Field: Mật khẩu mới */}
           <div>
             <label

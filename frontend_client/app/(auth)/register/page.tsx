@@ -208,7 +208,7 @@ function RegisterForm() {
 
       {/* b1 */}
       {currentStep === 1 && (
-        <form onSubmit={handleSubmitStep1(onSubmitStep1)} className="space-y-4">
+        <form onSubmit={handleSubmitStep1(onSubmitStep1)} autoComplete="off" className="space-y-4">
           {/* họ tên */}
           <div className="grid grid-cols-2 gap-3">
             {/* họ */}
@@ -222,7 +222,7 @@ function RegisterForm() {
               <input
                 id="last_name"
                 type="text"
-                autoComplete="family-name"
+                autoComplete="off"
                 {...registerStep1("last_name")}
                 placeholder="Nguyễn"
                 className={`w-full h-11 px-3.5 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
@@ -245,7 +245,7 @@ function RegisterForm() {
               <input
                 id="first_name"
                 type="text"
-                autoComplete="given-name"
+                autoComplete="off"
                 {...registerStep1("first_name")}
                 placeholder="Văn A"
                 className={`w-full h-11 px-3.5 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
@@ -269,7 +269,7 @@ function RegisterForm() {
             <input
               id="email"
               type="email"
-              autoComplete="username"
+              autoComplete="off"
               {...registerStep1("email")}
               placeholder="name@example.com"
               className={`w-full h-11 px-3.5 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${

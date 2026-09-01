@@ -154,7 +154,7 @@ export default function LoginPage() {
 
         {/* 5. Form Content */}
         {activeTab === "password" ? (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} autoComplete="off" className="space-y-4">
             {/* Field: Email */}
             <div>
               <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-zinc-900 mb-1.5">
@@ -163,7 +163,7 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
-                autoComplete="username"
+                autoComplete="off"
                 {...register("email")}
                 placeholder="name@example.com"
                 className={`w-full h-11 px-3.5 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
@@ -184,7 +184,7 @@ export default function LoginPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   {...register("password")}
                   placeholder="••••••••"
                   className={`w-full h-11 pl-3.5 pr-10 text-sm bg-zinc-50 border hover:border-zinc-400 focus:border-zinc-900 text-zinc-900 outline-none rounded-none transition-colors placeholder:text-zinc-400 ${
