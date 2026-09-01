@@ -7,20 +7,16 @@ interface JwtPayload {
   role?: string;
   date?: string;
 }
-
 interface RequireAuthProps {
   allowedRoles?: string[];
 }
-
 const RequireAuth: React.FC<RequireAuthProps> = ({
   allowedRoles = ["admin", "staff"],
 }) => {
   const token = localStorage.getItem("accessToken");
-
   if (!token) {
     return <Navigate to="/login" replace />;
   }
-
   try {
     const decoded = jwtDecode<JwtPayload>(token);
     const userRole = decoded?.role || "";

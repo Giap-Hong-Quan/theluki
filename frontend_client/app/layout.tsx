@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "THE LUKI - Fashion & Trendy Lifestyle",
+  title: "THE LUKI - Thời Trang & Phong Cách Sống",
   description: "Nền tảng mua sắm thời trang & phụ kiện cao cấp THE LUKI.",
 };
 
