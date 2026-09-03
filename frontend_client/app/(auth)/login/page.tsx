@@ -12,7 +12,6 @@ import { loginSchema, LoginFormData } from "@/validators/auth.validator";
 import { useLogin, useGoogleAuth } from "@/hooks/useAuth";
 import { authService } from "@/services/authService";
 import { useGoogleLogin } from "@react-oauth/google";
-import TheLukiLoader from "@/components/common/TheLukiLoader";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -65,16 +64,6 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* Overlay loader when login or Google auth is pending */}
-      {(loginMutation.isPending || googleAuthMutation.isPending) && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md transition-all duration-300">
-          <TheLukiLoader text="Đang đăng nhập..." />
-          <p className="mt-4 text-sm font-semibold tracking-widest text-white uppercase animate-pulse">
-            Đang xử lý đăng nhập...
-          </p>
-        </div>
-      )}
-
       <div className="w-full bg-white border border-zinc-200 p-8 sm:p-10 shadow-sm rounded-none transition-colors duration-200">
         {/* 1. Header / Logo Branding */}
         <div className="flex flex-col items-center justify-center text-center mb-8">

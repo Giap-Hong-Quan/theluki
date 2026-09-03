@@ -17,7 +17,6 @@ import { useCollections } from "@/hooks/useCollection";
 import { useCategories } from "@/hooks/useCategory";
 import { USER_MENU_ITEMS, INTRODUCE_LINKS } from "@/contants/navigation";
 import SearchDrawer from "./SearchDrawer";
-import TheLukiLoader from "@/components/common/TheLukiLoader";
 
 export default function Header() {
   const pathname = usePathname();
@@ -68,16 +67,6 @@ export default function Header() {
 
   return (
     <>
-      {/* Overlay loader khi đang xử lý đăng xuất */}
-      {logoutMutation.isPending && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md transition-all duration-300">
-          <TheLukiLoader text="Đang xử lý..." />
-          <p className="mt-4 text-sm font-semibold tracking-widest text-white uppercase animate-pulse">
-            Đang đăng xuất...
-          </p>
-        </div>
-      )}
-
       <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-zinc-200 transition-colors duration-200">
         {/* Container rộng thoáng, padding 2 bên cân đối */}
         <div className="max-w-[1500px] mx-auto px-4 sm:px-8 lg:px-12">
