@@ -17,6 +17,7 @@ import ReviewPage from "../pages/admin/ReviewPage";
 import CouponPage from "../pages/admin/CouponPage";
 import BlogPage from "../pages/admin/BlogPage";
 import BannerPage from "../pages/admin/BannerPage";
+import NotFoundPage from "../pages/common/NotFoundPage";
 
 const router = createBrowserRouter([
   {
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
 

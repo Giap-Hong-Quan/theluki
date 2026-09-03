@@ -11,3 +11,28 @@
     scrollbar-width: none;  /* Firefox */
   }
 }
+
+/* Custom thanh cuộn: Loại bỏ 2 nút mũi tên ở 2 đầu và tạo thanh cuộn tối giản */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-track {
+  background: #f2f1ee;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c8c5be;
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #78756d;
+}

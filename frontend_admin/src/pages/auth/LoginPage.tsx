@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { authService } from "../../service/auth";
+import { jwtDecode } from "jwt-decode";
+import toast from "react-hot-toast";
+import { authService } from "../../service/authService";
 import logoImg from "../../assets/image/logo.png";
+
+interface JwtPayload {
+  id?: string;
+  role?: string;
+}
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -19,13 +26,32 @@ export default function LoginPage() {
     setErrorMsg("");
 
     if (!email.trim() || !password.trim()) {
-      setErrorMsg("Vui lòng điền đầy đủ email và mật khẩu.");
+      const msg = "Vui lòng điền đầy đủ email và mật khẩu.";
+      setErrorMsg(msg);
+      toast.error(msg);
       return;
     }
 
     try {
       setLoading(true);
-      await authService.loginAdmin({ email: email.trim(), password });
+      const res = await authService.loginAdmin({ email: email.trim(), password });
+      const token = res?.data?.accessToken || (res as any)?.data?.data?.accessToken;
+
+      if (!token) {
+        throw new Error("Không nhận được mã xác thực từ máy chủ.");
+      }
+
+      // Kiểm tra quyền role của tài khoản
+      const decoded = jwtDecode<JwtPayload>(token);
+      const role = decoded.role || "";
+      if (role !== "admin" && role !== "staff") {
+        throw new Error("Tài khoản của bạn không có quyền truy cập vào trang Quản trị.");
+      }
+
+      // Lưu accessToken vào localStorage
+      localStorage.setItem("accessToken", token);
+
+      toast.success("Đăng nhập thành công!");
       navigate("/");
     } catch (err: any) {
       const msg =
@@ -33,6 +59,7 @@ export default function LoginPage() {
         err?.message ||
         "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.";
       setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
