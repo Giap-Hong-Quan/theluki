@@ -7,229 +7,6 @@ import Pagination from "../../components/common/Pagination";
 import { useGetAllUsers } from "../../hook/useUser";
 import type { UserItem } from "../../types/userType";
 
-const CUSTOMER_DATA: any[] = [
-  {
-    id: "KH-18402",
-    name: "Nguyễn Minh Anh",
-    phone: "0912345678",
-    tier: "Vàng",
-    orders: 14,
-    spent: "23,4trđ",
-    aov: "1.671.000đ",
-    points: "2.480",
-    lastOrder: "21/08/2026",
-  },
-  {
-    id: "KH-18388",
-    name: "Trần Quốc Bảo",
-    phone: "0938111222",
-    tier: "Bạc",
-    orders: 8,
-    spent: "11,2trđ",
-    aov: "1.400.000đ",
-    points: "1.120",
-    lastOrder: "24/08/2026",
-  },
-  {
-    id: "KH-18201",
-    name: "Lê Hoài Thu",
-    phone: "0907654321",
-    tier: "Kim cương",
-    orders: 32,
-    spent: "64,8trđ",
-    aov: "2.025.000đ",
-    points: "6.480",
-    lastOrder: "23/08/2026",
-  },
-  {
-    id: "KH-17984",
-    name: "Phạm Gia Hân",
-    phone: "0981234567",
-    tier: "Đồng",
-    orders: 3,
-    spent: "2,1trđ",
-    aov: "700.000đ",
-    points: "210",
-    lastOrder: "23/08/2026",
-  },
-  {
-    id: "KH-17766",
-    name: "Vũ Đức Thắng",
-    phone: "0913888999",
-    tier: "Vàng",
-    orders: 18,
-    spent: "28,6trđ",
-    aov: "1.589.000đ",
-    points: "2.860",
-    lastOrder: "23/08/2026",
-  },
-  {
-    id: "KH-17402",
-    name: "Đỗ Thanh Mai",
-    phone: "0977222333",
-    tier: "Bạc",
-    orders: 9,
-    spent: "9,8trđ",
-    aov: "1.089.000đ",
-    points: "980",
-    lastOrder: "22/08/2026",
-  },
-  {
-    id: "KH-16988",
-    name: "Bùi Khánh Linh",
-    phone: "0966444555",
-    tier: "Vàng",
-    orders: 15,
-    spent: "21,4trđ",
-    aov: "1.427.000đ",
-    points: "2.140",
-    lastOrder: "22/08/2026",
-  },
-  {
-    id: "KH-16512",
-    name: "Hoàng Nam Sơn",
-    phone: "0944666777",
-    tier: "Đồng",
-    orders: 2,
-    spent: "3,1trđ",
-    aov: "1.550.000đ",
-    points: "310",
-    lastOrder: "21/08/2026",
-  },
-  {
-    id: "KH-16230",
-    name: "Ngô Nhật Quang",
-    phone: "0909123890",
-    tier: "Bạc",
-    orders: 6,
-    spent: "8,5trđ",
-    aov: "1.416.000đ",
-    points: "850",
-    lastOrder: "20/08/2026",
-  },
-  {
-    id: "KH-15981",
-    name: "Dương Ngọc Ánh",
-    phone: "0988776655",
-    tier: "Kim cương",
-    orders: 41,
-    spent: "88,2trđ",
-    aov: "2.151.000đ",
-    points: "8.820",
-    lastOrder: "20/08/2026",
-  },
-  {
-    id: "KH-15744",
-    name: "Phan Văn Hậu",
-    phone: "0934567891",
-    tier: "Vàng",
-    orders: 12,
-    spent: "19,8trđ",
-    aov: "1.650.000đ",
-    points: "1.980",
-    lastOrder: "19/08/2026",
-  },
-  {
-    id: "KH-15420",
-    name: "Trịnh Thúy Vy",
-    phone: "0918765432",
-    tier: "Đồng",
-    orders: 4,
-    spent: "4,6trđ",
-    aov: "1.150.000đ",
-    points: "460",
-    lastOrder: "19/08/2026",
-  },
-  {
-    id: "KH-15109",
-    name: "Lý Hoàng Hải",
-    phone: "0971239876",
-    tier: "Bạc",
-    orders: 7,
-    spent: "10,5trđ",
-    aov: "1.500.000đ",
-    points: "1.050",
-    lastOrder: "18/08/2026",
-  },
-  {
-    id: "KH-14890",
-    name: "Đặng Mỹ Duyên",
-    phone: "0965891234",
-    tier: "Vàng",
-    orders: 16,
-    spent: "26,1trđ",
-    aov: "1.631.000đ",
-    points: "2.610",
-    lastOrder: "18/08/2026",
-  },
-  {
-    id: "KH-14562",
-    name: "Tạ Minh Khang",
-    phone: "0943219876",
-    tier: "Đồng",
-    orders: 1,
-    spent: "1,2trđ",
-    aov: "1.200.000đ",
-    points: "120",
-    lastOrder: "17/08/2026",
-  },
-  {
-    id: "KH-14210",
-    name: "Cao Thùy Trang",
-    phone: "0903344556",
-    tier: "Kim cương",
-    orders: 28,
-    spent: "52,9trđ",
-    aov: "1.889.000đ",
-    points: "5.290",
-    lastOrder: "16/08/2026",
-  },
-  {
-    id: "KH-13905",
-    name: "Huỳnh Tuấn Kiệt",
-    phone: "0982334411",
-    tier: "Bạc",
-    orders: 10,
-    spent: "14,3trđ",
-    aov: "1.430.000đ",
-    points: "1.430",
-    lastOrder: "15/08/2026",
-  },
-  {
-    id: "KH-13650",
-    name: "Võ Quỳnh Chi",
-    phone: "0916778899",
-    tier: "Vàng",
-    orders: 20,
-    spent: "31,5trđ",
-    aov: "1.575.000đ",
-    points: "3.150",
-    lastOrder: "15/08/2026",
-  },
-  {
-    id: "KH-13320",
-    name: "Lâm Đình Trọng",
-    phone: "0978990011",
-    tier: "Đồng",
-    orders: 3,
-    spent: "3,8trđ",
-    aov: "1.266.000đ",
-    points: "380",
-    lastOrder: "14/08/2026",
-  },
-  {
-    id: "KH-13008",
-    name: "Mai Bảo Ngọc",
-    phone: "0931223344",
-    tier: "Kim cương",
-    orders: 35,
-    spent: "72,4trđ",
-    aov: "2.068.000đ",
-    points: "7.240",
-    lastOrder: "13/08/2026",
-  },
-];
-
 const columns: ColumnType<UserItem>[] = [
   {
     key: "stt",
@@ -429,7 +206,7 @@ const columns: ColumnType<UserItem>[] = [
     width: 130,
     align: "center",
     fixed: "right",
-    render: (_, _record) => (
+    render: () => (
       <div className="flex items-center justify-center gap-1.5">
         <button
           type="button"
@@ -453,14 +230,14 @@ const columns: ColumnType<UserItem>[] = [
 const CustomerPage = () => {
   const [form] = Form.useForm();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize] = useState(20);
   const { data: listUsers, isLoading } = useGetAllUsers({
     page,
     sizePage: pageSize,
   });
 
-  const userList = listUsers?.data?.users || (listUsers as any)?.users || [];
-  const totalItems = listUsers?.data?.totalUser || (listUsers as any)?.totalUser || 0;
+  const userList = listUsers?.users || [];
+  const totalItems = listUsers?.totalUser || 0;
   return (
     <div className="space-y-4">
       {/* 1. Header Bar */}

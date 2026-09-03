@@ -22,7 +22,7 @@ apiClient.interceptors.request.use(
 
 // Response Interceptor: Xử lý lỗi 401 tự động logout
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => response?.data,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("accessToken");
