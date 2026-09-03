@@ -4,7 +4,7 @@ import { LoginFormData } from "@/validators/auth.validator";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { SignupPayload, UserProfile } from "@/types/authType";
-import { getCookie } from "@/lib/axios-client";
+import { getCookie } from "@/services/axios-client";
 
 // Lấy thông tin Profile người dùng hiện tại
 export const useProfile = () => {

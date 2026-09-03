@@ -1,4 +1,4 @@
-import axiosClient from "@/lib/axios-client";
+import axiosClient from "@/services/axios-client";
 import { API_ENDPOINTS } from "@/contants/api-endpoint";
 import {
   GetBannersParams,
