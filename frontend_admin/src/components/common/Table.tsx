@@ -1,4 +1,5 @@
 import { Loader2, Inbox } from "lucide-react";
+import TableRowSkeleton from "./TableRowSkeleton";
 
 export interface ColumnType<T> {
   key: string;
@@ -15,6 +16,7 @@ export interface TableProps<T> {
   dataSource?: T[];
   rowKey?: keyof T | ((record: T) => string);
   loading?: boolean;
+  skeletonRows?: number;
   emptyText?: string;
   className?: string;
   onRowClick?: (record: T, index: number) => void;
@@ -25,6 +27,7 @@ export default function Table<T extends Record<string, any>>({
   dataSource = [],
   rowKey = "id",
   loading = false,
+  skeletonRows,
   emptyText = "Không có dữ liệu",
   className = "",
   onRowClick,
@@ -73,14 +76,20 @@ export default function Table<T extends Record<string, any>>({
         {/* 2. Thân Bảng */}
         <tbody className="divide-y divide-[#eceae4] text-zinc-900 text-lg">
           {loading ? (
-            <tr>
-              <td colSpan={columns.length} className="py-14 text-center text-zinc-500">
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin text-zinc-900" />
-                  <span className="font-mono text-xs">Đang tải dữ liệu...</span>
-                </div>
-              </td>
-            </tr>
+            skeletonRows ? (
+              Array.from({ length: skeletonRows }).map((_, idx) => (
+                <TableRowSkeleton key={idx} columns={columns} />
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length} className="py-14 text-center text-zinc-500">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-zinc-900" />
+                    <span className="font-mono text-xs">Đang tải dữ liệu...</span>
+                  </div>
+                </td>
+              </tr>
+            )
           ) : dataSource.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="py-14 text-center text-zinc-400">

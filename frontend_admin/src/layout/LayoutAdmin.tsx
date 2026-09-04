@@ -1,7 +1,8 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "../components/common/Sidebar";
 import Header from "../components/common/Header";
+import TheLukiLoader from "../components/common/TheLukiLoader";
 
 const LayoutAdmin: React.FC = () => {
   return (
@@ -16,7 +17,9 @@ const LayoutAdmin: React.FC = () => {
 
         {/* Nội dung trang */}
         <main className="flex-1 overflow-y-auto p-4 text-zinc-900">
-          <Outlet />
+          <Suspense fallback={<TheLukiLoader />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

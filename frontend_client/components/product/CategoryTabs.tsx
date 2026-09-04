@@ -1,6 +1,4 @@
 "use client";
-
-import React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Tabs, ConfigProvider, Skeleton } from "antd";
 import { useCategories } from "@/hooks/useCategory";
@@ -9,14 +7,11 @@ export default function CategoryTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category") || "all";
-
-  // Lấy danh sách danh mục từ API
   const { data: categories = [], isLoading } = useCategories({
     isActive: true,
     isDeleted: false,
     sizePage: 0,
   });
-
   const handleSelectCategory = (key: string) => {
     const params = new URLSearchParams(searchParams.toString());
     if (key === "all") {

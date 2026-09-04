@@ -243,10 +243,15 @@ userRouter.delete("/:id/force", verifyToken, authorizeRoles("admin"), forceDelet
  *           type: string
  *         description: Tìm theo Họ tên, Email, Số điện thoại
  *       - in: query
- *         name: status
+ *         name: isActive
  *         schema:
- *           type: string
- *         description: active hoặc inactive
+ *           type: boolean
+ *         description: Trạng thái tài khoản (true = Đang hoạt động, false = Bị khóa)
+ *       - in: query
+ *         name: isOnline
+ *         schema:
+ *           type: boolean
+ *         description: Trạng thái đăng nhập trực tuyến (true = Đang online, false = Offline)
  *       - in: query
  *         name: tier
  *         schema:
@@ -256,12 +261,12 @@ userRouter.delete("/:id/force", verifyToken, authorizeRoles("admin"), forceDelet
  *         name: fromDate
  *         schema:
  *           type: string
- *         description: Ngày bắt đầu (YYYY-MM-DD)
+ *         description: Ngày bắt đầu (Hỗ trợ DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, ISO)
  *       - in: query
  *         name: toDate
  *         schema:
  *           type: string
- *         description: Ngày kết thúc (YYYY-MM-DD)
+ *         description: Ngày kết thúc (Hỗ trợ DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, ISO)
  *       - in: query
  *         name: isDeleted
  *         schema:

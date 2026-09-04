@@ -65,3 +65,23 @@ export const SIDEBAR_MENU: MenuGroup[] = [
     ],
   },
 ];
+
+// Danh sách Hạng thành viên đọc từ DB User schema (membership_tier enum)
+export const MEMBERSHIP_TIER_OPTIONS = [
+  { value: "newbie", label: "MỚI" },
+  { value: "bronze", label: "ĐỒNG" },
+  { value: "silver", label: "BẠC" },
+  { value: "gold", label: "VÀNG" },
+  { value: "platinum", label: "BẠCH KIM" },
+  { value: "diamond", label: "KIM CƯƠNG" },
+  { value: "black-diamond", label: "KIM CƯƠNG ĐEN" },
+];
+
+// export const CARD_PRODUCT =[
+//   {
+//     title: "tổng khách hàng",
+//     number :(number:string)=>{
+//       return number.toLocaleString()
+//     },
+//   }
+// ]

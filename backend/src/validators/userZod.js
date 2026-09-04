@@ -87,8 +87,13 @@ export const userIdParamZod = z.object({
     })
 });
 
-// Helper ép kiểu boolean cho Query URL ("true"/"false" -> boolean)
-const parseBooleanQuery = z.enum(["true", "false"]).transform((val) => val === "true").optional();
+// Helper ép kiểu boolean cho Query URL ("true"/"false" -> boolean, hoặc boolean thuần)
+const parseBooleanQuery = z
+    .union([
+        z.boolean(),
+        z.enum(["true", "false"]).transform((val) => val === "true")
+    ])
+    .optional();
 
 // Schema Validate Query Lấy Danh Sách Người Dùng (Admin)
 export const getUsersQueryZod = z.object({

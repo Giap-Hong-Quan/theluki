@@ -1,23 +1,26 @@
+import { lazy } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import LayoutAdmin from "../layout/LayoutAdmin";
 import RequireAuth from "../libs/RequireAuth";
-import DashboardPage from "../pages/admin/DashboardPage";
-import ReportPage from "../pages/admin/ReportPage";
-import OrderPage from "../pages/admin/OrderPage";
-import PosPage from "../pages/admin/PosPage";
-import ReturnsPage from "../pages/admin/ReturnsPage";
-import CustomerPage from "../pages/admin/CustomerPage";
-import CskhPage from "../pages/admin/CskhPage";
-import ProductPage from "../pages/admin/ProductPage";
-import CollectionPage from "../pages/admin/CollectionPage";
-import CategoryPage from "../pages/admin/CategoryPage";
-import InventoryPage from "../pages/admin/InventoryPage";
-import ReviewPage from "../pages/admin/ReviewPage";
-import CouponPage from "../pages/admin/CouponPage";
-import BlogPage from "../pages/admin/BlogPage";
-import BannerPage from "../pages/admin/BannerPage";
 import NotFoundPage from "../pages/common/NotFoundPage";
+
+// Lazy load các trang Admin để kích hoạt cơ chế Loading Page (Suspense)
+const DashboardPage = lazy(() => import("../pages/admin/DashboardPage"));
+const ReportPage = lazy(() => import("../pages/admin/ReportPage"));
+const OrderPage = lazy(() => import("../pages/admin/OrderPage"));
+const PosPage = lazy(() => import("../pages/admin/PosPage"));
+const ReturnsPage = lazy(() => import("../pages/admin/ReturnsPage"));
+const CustomerPage = lazy(() => import("../pages/admin/CustomerPage"));
+const CskhPage = lazy(() => import("../pages/admin/CskhPage"));
+const ProductPage = lazy(() => import("../pages/admin/ProductPage"));
+const CollectionPage = lazy(() => import("../pages/admin/CollectionPage"));
+const CategoryPage = lazy(() => import("../pages/admin/CategoryPage"));
+const InventoryPage = lazy(() => import("../pages/admin/InventoryPage"));
+const ReviewPage = lazy(() => import("../pages/admin/ReviewPage"));
+const CouponPage = lazy(() => import("../pages/admin/CouponPage"));
+const BlogPage = lazy(() => import("../pages/admin/BlogPage"));
+const BannerPage = lazy(() => import("../pages/admin/BannerPage"));
 
 const router = createBrowserRouter([
   {

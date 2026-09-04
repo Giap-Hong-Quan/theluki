@@ -4,6 +4,7 @@ import Role from "../models/Role.js";
 import ApiError from "../exceptions/ApiError.js";
 import { success } from "../utils/success.js";
 import { hashPassword } from "../utils/password.js";
+import { buildDateFilter } from "../utils/date.js";
 
 // 1. Tạo mới tài khoản người dùng (Admin tạo)
 export const createUserController = async (req, res, next) => {
@@ -221,23 +222,16 @@ export const getAllUserController = async (req, res, next) => {
             toDate,
             isDeleted
         } = req.query;
-
         const query = {};
-
-        // 1. Lọc theo danh sách bị xóa (deletedAt)
         if (isDeleted === true) {
             query.deletedAt = { $ne: null };
         } else {
             query.deletedAt = null;
         }
-
-        // 2. Chỉ lọc lấy người dùng có role là "user"
         const roleUser = await Role.findOne({ name: "user" });
         if (roleUser) {
             query.role = roleUser._id;
         }
-
-        // 3. Lọc theo từ khóa tìm kiếm (Tên, Email, Số điện thoại)
         if (search && search.trim() !== "") {
             const searchTrim = search.trim();
             query.$or = [
@@ -246,33 +240,25 @@ export const getAllUserController = async (req, res, next) => {
                 { phone: { $regex: searchTrim, $options: "i" } }
             ];
         }
-
-        // 4. Lọc theo trạng thái hoạt động (isActive)
         if (typeof isActive === "boolean") {
             query.isActive = isActive;
+        } else if (isActive === "true" || isActive === "false") {
+            query.isActive = isActive === "true";
         }
-
-        // 4.1 Lọc theo trạng thái online (isOnline)
         if (typeof isOnline === "boolean") {
             query.isOnline = isOnline;
+        } else if (isOnline === "true" || isOnline === "false") {
+            query.isOnline = isOnline === "true";
         }
-
-        // 5. Lọc theo hạng thành viên (membership_tier)
         if (tier && tier.trim() !== "") {
             query.membership_tier = tier.trim();
         }
-
-        // 6. Lọc theo khoảng thời gian tạo (fromDate -> toDate)
-        if (fromDate || toDate) {
-            query.createdAt = {};
-            if (fromDate) query.createdAt.$gte = new Date(fromDate);
-            if (toDate) query.createdAt.$lte = new Date(toDate);
+        const dateFilter = buildDateFilter(fromDate, toDate);
+        if (dateFilter) {
+            query.createdAt = dateFilter;
         }
-
-        // Phân trang (Nếu sizePage = 0, Mongoose .limit(0) sẽ tự động lấy toàn bộ)
         const limit = sizePage;
         const skip = limit > 0 ? (page - 1) * limit : 0;
-
         const [users, count] = await Promise.all([
             User.find(query)
                 .sort({ createdAt: -1 })
