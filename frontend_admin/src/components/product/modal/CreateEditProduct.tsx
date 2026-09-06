@@ -1,30 +1,13 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Drawer, Switch, Select } from "antd";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
-import {
-  Shirt,
-  Check,
-  X,
-  Globe,
-  Plus,
-  Trash2,
-  Image as ImageIcon,
-  Layers,
-  Tag as TagIcon,
-  Star,
-  Info,
-  Upload,
-  Link as LinkIcon,
-} from "lucide-react";
-import type {
-  ProductItem,
-  CreateProductPayload,
-  UpdateProductPayload,
-} from "../../../types/productType";
+import { useForm, Controller, useFieldArray, type Control, type UseFormRegister,} from "react-hook-form";
+import {Shirt, Check, X, Globe, Plus, Trash2,Image as ImageIcon,Layers,Tag as TagIcon,Star, Info,Upload, Link as LinkIcon,} from "lucide-react";
+import type { ProductItem, CreateProductPayload, UpdateProductPayload} from "../../../types/productType";
 import { useCreateProduct, useUpdateProduct } from "../../../hook/useProduct";
 import { useGetAllCategories } from "../../../hook/useCategory";
 import { useGetAllCollections } from "../../../hook/useCollection";
 import { slugifyHelper as slugifyPreview } from "../../../utils/slugify";
+import { formatPrice } from "../../../utils/formatPrice";
 
 export interface ProductFormValues {
   name: string;
@@ -62,8 +45,6 @@ interface CreateEditProductProps {
   initialValues?: ProductItem | null;
   onSuccess?: () => void;
 }
-
-const COMMON_SIZES = ["S", "M", "L", "XL", "2XL", "FreeSize"];
 
 // Chuyển File từ máy tính sang chuỗi Base64 Data URL để preview và lưu DB
 const readFileAsDataUrl = (file: File): Promise<string> => {
@@ -377,6 +358,190 @@ const VariantDualImageField = ({
   );
 };
 
+// Component Input tự động định dạng số có phân tách hàng nghìn (VD: 450.000)
+interface FormattedNumberInputProps {
+  value?: number | null;
+  onChange: (val?: number) => void;
+  placeholder?: string;
+  className?: string;
+}
+
+const FormattedNumberInput = ({
+  value,
+  onChange,
+  placeholder,
+  className,
+}: FormattedNumberInputProps) => {
+  const displayValue =
+    value !== undefined && value !== null && !isNaN(value)
+      ? formatPrice(value, false)
+      : "";
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    if (!raw) {
+      onChange(undefined);
+    } else {
+      const parsed = parseInt(raw, 10);
+      onChange(isNaN(parsed) ? undefined : parsed);
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      value={displayValue}
+      onChange={handleChange}
+      placeholder={placeholder}
+      className={className}
+    />
+  );
+};
+
+// Component quản lý Size động của từng biến thể màu sắc
+interface VariantSizesManagerProps {
+  vIndex: number;
+  control: Control<ProductFormValues>;
+  register: UseFormRegister<ProductFormValues>;
+}
+
+const QUICK_SIZES = ["S", "M", "L", "XL", "2XL", "FreeSize"];
+
+const VariantSizesManager = ({
+  vIndex,
+  control,
+  register,
+}: VariantSizesManagerProps) => {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: `variants.${vIndex}.sizes` as const,
+  });
+
+  const handleAddSize = (sizeName: string = "") => {
+    append({
+      size: sizeName,
+      stock: 10,
+    });
+  };
+
+  return (
+    <div className="pt-2.5 border-t border-zinc-200 space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-mono font-bold block text-zinc-800">
+            CÁC SIZE & TỒN KHO CỦA MÀU NÀY:
+          </span>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 bg-zinc-100 text-zinc-600 border border-zinc-200 font-bold">
+            {fields.length} SIZE
+          </span>
+        </div>
+
+        {/* Nút thêm size & Gợi ý nhanh */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] text-zinc-400 font-mono hidden sm:inline">
+            Gợi ý nhanh:
+          </span>
+          <div className="flex items-center gap-1">
+            {QUICK_SIZES.map((qs) => (
+              <button
+                key={qs}
+                type="button"
+                onClick={() => handleAddSize(qs)}
+                className="text-[10px] font-mono px-1.5 py-0.5 border border-zinc-200 bg-white hover:border-black hover:bg-zinc-100 text-zinc-700 cursor-pointer transition-colors"
+                title={`Thêm nhanh size ${qs}`}
+              >
+                +{qs}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleAddSize("")}
+            className="h-6 px-2.5 text-[11px] font-mono font-bold bg-black text-white hover:bg-zinc-800 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+          >
+            <Plus className="w-3 h-3" />
+            THÊM SIZE
+          </button>
+        </div>
+      </div>
+
+      {fields.length === 0 ? (
+        <div className="border border-dashed border-zinc-300 bg-zinc-50 p-4 text-center space-y-1.5">
+          <p className="text-xs font-mono text-zinc-500">
+            Chưa có size nào cho biến thể này.
+          </p>
+          <button
+            type="button"
+            onClick={() => handleAddSize("FreeSize")}
+            className="text-xs font-mono text-black underline font-bold hover:text-zinc-700 cursor-pointer"
+          >
+            + Nhấn vào đây để thêm size FreeSize
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          {fields.map((fieldItem, szIndex) => (
+            <div
+              key={fieldItem.id}
+              className="p-1.5 border border-zinc-300 bg-zinc-50 space-y-1 relative group hover:border-black transition-colors"
+            >
+              {/* Header size: Input tên size + nút xóa */}
+              <div className="flex items-center gap-1">
+                <input
+                  type="text"
+                  placeholder="Size..."
+                  {...register(
+                    `variants.${vIndex}.sizes.${szIndex}.size` as const,
+                    { required: true }
+                  )}
+                  className="w-full h-6 px-1 text-center font-mono text-xs font-bold border border-zinc-300 focus:border-black outline-none bg-white uppercase"
+                />
+                <button
+                  type="button"
+                  onClick={() => remove(szIndex)}
+                  className="p-1 text-zinc-400 hover:text-red-600 cursor-pointer transition-colors"
+                  title="Xóa size này"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Input tồn kho */}
+              <div className="space-y-0.5">
+                <div className="text-[9px] font-mono text-zinc-400 text-center font-semibold">
+                  TỒN KHO
+                </div>
+                <input
+                  type="number"
+                  min={0}
+                  {...register(
+                    `variants.${vIndex}.sizes.${szIndex}.stock` as const,
+                    { valueAsNumber: true }
+                  )}
+                  placeholder="SL"
+                  className="w-full h-7 px-1 text-center border border-zinc-300 focus:border-black outline-none bg-white font-mono text-xs font-bold"
+                />
+              </div>
+            </div>
+          ))}
+
+          {/* Ô nút bấm Thêm Size dạng thẻ trong Grid */}
+          <button
+            type="button"
+            onClick={() => handleAddSize("")}
+            className="p-2 border border-dashed border-zinc-300 hover:border-black bg-white hover:bg-zinc-50 text-zinc-500 hover:text-black flex flex-col items-center justify-center min-h-[68px] cursor-pointer transition-colors space-y-0.5"
+          >
+            <Plus className="w-3.5 h-3.5 text-zinc-600" />
+            <span className="text-[10px] font-mono font-bold">+ THÊM SIZE</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Component chọn nhiều ảnh Gallery (Tải từ máy hàng loạt & Nhập link)
 const GalleryDualImageField = ({
   images,
@@ -589,19 +754,60 @@ const CreateEditProduct = ({
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
   const isSubmitting = isCreating || isUpdating;
 
-  // Lấy danh mục và bộ sưu tập để chọn
-  const { data: listCategories } = useGetAllCategories({ isActive: true });
-  const { data: listCollections } = useGetAllCollections({ isActive: true });
+  // Lấy danh mục và bộ sưu tập để chọn (lấy toàn bộ, không giới hạn isActive để hiển thị đủ khi sửa)
+  const { data: listCategories } = useGetAllCategories();
+  const { data: listCollections } = useGetAllCollections();
 
-  const categoryOptions = (listCategories?.categories || []).map((cat) => ({
-    value: cat._id,
-    label: cat.name,
-  }));
+  // Đảm bảo category của sản phẩm hiện tại luôn có trong options để hiển thị Tên thay vì ID
+  const categoryOptions = useMemo(() => {
+    const list = (listCategories?.categories || []).map((cat) => ({
+      value: cat._id,
+      label: cat.name,
+    }));
 
-  const collectionOptions = (listCollections?.collections || []).map((col) => ({
-    value: col._id,
-    label: col.name,
-  }));
+    if (initialValues?.category) {
+      const currentCatId =
+        typeof initialValues.category === "object"
+          ? initialValues.category._id
+          : initialValues.category;
+      const currentCatName =
+        typeof initialValues.category === "object"
+          ? initialValues.category.name
+          : undefined;
+
+      if (currentCatId && !list.some((item) => item.value === currentCatId)) {
+        list.unshift({
+          value: currentCatId,
+          label: currentCatName || currentCatId,
+        });
+      }
+    }
+
+    return list;
+  }, [listCategories, initialValues]);
+
+  // Đảm bảo collections của sản phẩm hiện tại luôn có trong options để hiển thị Tên thay vì ID
+  const collectionOptions = useMemo(() => {
+    const list = (listCollections?.collections || []).map((col) => ({
+      value: col._id,
+      label: col.name,
+    }));
+
+    if (initialValues?.collections && Array.isArray(initialValues.collections)) {
+      initialValues.collections.forEach((col: any) => {
+        const colId = typeof col === "object" ? col?._id : col;
+        const colName = typeof col === "object" ? col?.name : undefined;
+        if (colId && !list.some((item) => item.value === colId)) {
+          list.unshift({
+            value: colId,
+            label: colName || colId,
+          });
+        }
+      });
+    }
+
+    return list;
+  }, [listCollections, initialValues]);
 
   const {
     register,
@@ -686,8 +892,13 @@ const CreateEditProduct = ({
           sku: initialValues.sku || "",
           price: initialValues.price || 0,
           original_price: initialValues.original_price || undefined,
-          category: initialValues.category?._id || "",
-          collections: (initialValues.collections || []).map((c) => c._id),
+          category:
+            (typeof initialValues.category === "object"
+              ? initialValues.category?._id
+              : initialValues.category) || "",
+          collections: (initialValues.collections || [])
+            .map((c: any) => (typeof c === "object" ? c?._id : c))
+            .filter(Boolean),
           weight: initialValues.weight || 300,
           description: initialValues.description || "",
           thumbnail: initialValues.thumbnail || "",
@@ -801,10 +1012,12 @@ const CreateEditProduct = ({
       image: v.image?.trim() || null,
       sku: v.sku?.trim() || undefined,
       isActive: v.isActive ?? true,
-      sizes: (v.sizes || []).map((s) => ({
-        size: s.size.trim(),
-        stock: Number(s.stock) || 0,
-      })),
+      sizes: (v.sizes || [])
+        .filter((s) => s.size && s.size.trim() !== "")
+        .map((s) => ({
+          size: s.size.trim(),
+          stock: Number(s.stock) || 0,
+        })),
     }));
 
     if (initialValues) {
@@ -1024,6 +1237,12 @@ const CreateEditProduct = ({
                       <Select
                         {...field}
                         placeholder="Chọn danh mục"
+                        showSearch
+                        filterOption={(input, option) =>
+                          String(option?.label ?? "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
                         className="w-full rounded-none h-9 [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!border-zinc-300"
                         options={categoryOptions}
                       />
@@ -1048,6 +1267,12 @@ const CreateEditProduct = ({
                         {...field}
                         mode="multiple"
                         placeholder="Gán vào bộ sưu tập"
+                        showSearch
+                        filterOption={(input, option) =>
+                          String(option?.label ?? "")
+                            .toLowerCase()
+                            .includes(input.toLowerCase())
+                        }
                         className="w-full rounded-none min-h-[36px] [&_.ant-select-selector]:!rounded-none [&_.ant-select-selector]:!border-zinc-300"
                         options={collectionOptions}
                         allowClear
@@ -1070,15 +1295,21 @@ const CreateEditProduct = ({
                   <label className="block text-zinc-700 mb-1 font-semibold text-xs font-sans">
                     GIÁ BÁN THỰC TẾ (₫) <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="number"
-                    min={0}
-                    {...register("price", {
+                  <Controller
+                    name="price"
+                    control={control}
+                    rules={{
                       required: "Giá bán là bắt buộc",
                       min: { value: 0, message: "Giá không được nhỏ hơn 0" },
-                    })}
-                    placeholder="VD: 450000"
-                    className="w-full h-9 px-3 border border-zinc-300 focus:border-black outline-none bg-white rounded-none font-mono text-xs font-bold"
+                    }}
+                    render={({ field }) => (
+                      <FormattedNumberInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="VD: 450.000"
+                        className="w-full h-9 px-3 border border-zinc-300 focus:border-black outline-none bg-white rounded-none font-sans text-xs font-bold"
+                      />
+                    )}
                   />
                   {errors.price && (
                     <p className="text-[11px] text-red-500 mt-1 font-mono">
@@ -1091,12 +1322,17 @@ const CreateEditProduct = ({
                   <label className="block text-zinc-700 mb-1 font-semibold text-xs font-sans">
                     GIÁ GỐC NIÊM YẾT (₫)
                   </label>
-                  <input
-                    type="number"
-                    min={0}
-                    {...register("original_price")}
-                    placeholder="VD: 550000"
-                    className="w-full h-9 px-3 border border-zinc-300 focus:border-black outline-none bg-white rounded-none font-mono text-xs text-zinc-500"
+                  <Controller
+                    name="original_price"
+                    control={control}
+                    render={({ field }) => (
+                      <FormattedNumberInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="VD: 550.000"
+                        className="w-full h-9 px-3 border border-zinc-300 focus:border-black outline-none bg-white rounded-none font-sans text-xs text-zinc-500"
+                      />
+                    )}
                   />
                   <span className="text-[10px] text-zinc-400 font-mono">
                     Hiển thị gạch ngang giảm giá
@@ -1107,12 +1343,16 @@ const CreateEditProduct = ({
                   <label className="block text-zinc-700 mb-1 font-semibold text-xs font-sans">
                     TRỌNG LƯỢNG (GRAM)
                   </label>
-                  <input
-                    type="number"
-                    min={0}
-                    {...register("weight")}
-                    placeholder="300"
-                    className="w-full h-9 px-3 border border-zinc-300 focus:border-black outline-none bg-white rounded-none font-mono text-xs"
+                  <Controller
+                    name="weight"
+                    control={control}
+                    render={({ field }) => (
+                      <FormattedNumberInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        className="w-full h-9 px-3 border border-zinc-300 focus:border-black outline-none bg-white rounded-none font-sans text-xs"
+                      />
+                    )}
                   />
                   <span className="text-[10px] text-zinc-400 font-mono">
                     Dùng để tính cước vận chuyển
@@ -1325,41 +1565,11 @@ const CreateEditProduct = ({
                 </div>
 
                 {/* Quản lý các Size của màu này */}
-                <div className="pt-2 border-t border-zinc-100 space-y-2">
-                  <span className="text-xs font-mono font-bold block text-zinc-800">
-                    CÁC SIZE & TỒN KHO CỦA MÀU NÀY:
-                  </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                    {COMMON_SIZES.map((sz, szIndex) => (
-                      <div
-                        key={sz}
-                        className="p-2 border border-zinc-200 bg-zinc-50 text-center space-y-1"
-                      >
-                        <input
-                          type="hidden"
-                          value={sz}
-                          {...register(
-                            `variants.${vIndex}.sizes.${szIndex}.size` as const
-                          )}
-                        />
-                        <span className="font-mono text-xs font-bold block text-zinc-900">
-                          {sz}
-                        </span>
-                        <input
-                          type="number"
-                          min={0}
-                          defaultValue={szIndex < 3 ? 15 : 0}
-                          {...register(
-                            `variants.${vIndex}.sizes.${szIndex}.stock` as const,
-                            { valueAsNumber: true }
-                          )}
-                          placeholder="SL"
-                          className="w-full h-7 px-1 text-center border border-zinc-300 focus:border-black outline-none bg-white font-mono text-xs font-bold"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <VariantSizesManager
+                  vIndex={vIndex}
+                  control={control}
+                  register={register}
+                />
               </div>
             ))}
           </div>

@@ -14,6 +14,7 @@ const ReturnsPage = lazy(() => import("../pages/admin/ReturnsPage"));
 const CustomerPage = lazy(() => import("../pages/admin/CustomerPage"));
 const CskhPage = lazy(() => import("../pages/admin/CskhPage"));
 const ProductPage = lazy(() => import("../pages/admin/ProductPage"));
+const ProductDetailPage = lazy(() => import("../pages/admin/ProductDetailPage"));
 const CollectionPage = lazy(() => import("../pages/admin/CollectionPage"));
 const CategoryPage = lazy(() => import("../pages/admin/CategoryPage"));
 const InventoryPage = lazy(() => import("../pages/admin/InventoryPage"));
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
           { path: "customers", element: <CustomerPage /> },
           { path: "cskh", element: <CskhPage /> },
           { path: "products", element: <ProductPage /> },
+          { path: "products/:id", element: <ProductDetailPage /> },
           { path: "collections", element: <CollectionPage /> },
           { path: "categories", element: <CategoryPage /> },
           { path: "inventory", element: <InventoryPage /> },

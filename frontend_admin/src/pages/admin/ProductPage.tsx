@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import {Form,Input,InputNumber,Select,Button,ConfigProvider,Switch,Image,Popconfirm,Modal,Tabs,Tag,Tooltip,} from "antd";
-import {Download,Plus,Search,RotateCcw,Pencil,Trash2,Shirt,Star,Eye,Image as ImageIcon,Code2,Tag as TagIcon,} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {Form,Input,InputNumber,Select,Button,ConfigProvider,Switch,Image,Popconfirm,Tooltip,} from "antd";
+import {Download,Plus,Search,RotateCcw,Pencil,Trash2,Shirt,Star,Eye,Image as ImageIcon,} from "lucide-react";
 import debounce from "lodash/debounce";
 import CardItem from "../../components/common/CardItem";
 import Table, { type ColumnType } from "../../components/common/Table";
@@ -15,6 +16,7 @@ import {
 import { useGetAllCategories } from "../../hook/useCategory";
 import { useGetAllCollections } from "../../hook/useCollection";
 import CreateEditProduct from "../../components/product/modal/CreateEditProduct";
+import { formatPrice } from "../../utils/formatPrice";
 
 interface ProductFilterFormValues {
   search?: string;
@@ -27,13 +29,12 @@ interface ProductFilterFormValues {
 }
 
 const ProductPage = () => {
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const [filter, setFilter] = useState<GetProductsQueryParams>({
     page: 1,
     sizePage: 20,
   });
-  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCreateEditModalOpen, setIsCreateEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   
@@ -233,9 +234,7 @@ const ProductPage = () => {
       align: "right",
       render: (_, record) => (
         <span className="font-mono text-xs text-zinc-400 line-through">
-          {record.original_price
-            ? `${record.original_price.toLocaleString("vi-VN")} ₫`
-            : "—"}
+          {record.original_price ? formatPrice(record.original_price) : "—"}
         </span>
       ),
     },
@@ -246,7 +245,7 @@ const ProductPage = () => {
       align: "right",
       render: (_, record) => (
         <span className="font-mono font-bold text-xs text-zinc-950 block">
-          {record.price.toLocaleString("vi-VN")} ₫
+          {formatPrice(record.price)}
         </span>
       ),
     },
@@ -340,13 +339,10 @@ const ProductPage = () => {
       fixed: "right",
       render: (_, record) => (
         <div className="flex items-center justify-center gap-1.5">
-          <Tooltip title="Xem chi tiết DB">
+          <Tooltip title="Xem chi tiết sản phẩm">
             <button
               type="button"
-              onClick={() => {
-                setSelectedProduct(record);
-                setIsDetailModalOpen(true);
-              }}
+              onClick={() => navigate(`/products/${record._id}`)}
               className="p-1.5 hover:bg-zinc-100 text-zinc-600 hover:text-black transition-colors cursor-pointer"
             >
               <Eye className="w-4 h-4" />
@@ -594,183 +590,6 @@ const ProductPage = () => {
           />
         </div>
       </div>
-
-      {/* 5. Modal Xem Chi Tiết Toàn Diện & Dữ Liệu DB (Compass Schema) */}
-      <Modal
-        open={isDetailModalOpen}
-        onCancel={() => setIsDetailModalOpen(false)}
-        footer={null}
-        width={850}
-        title={
-          <div className="flex items-center gap-2 font-mono uppercase pb-2 border-b border-zinc-200">
-            <Eye className="w-4 h-4 text-black" />
-            <span className="font-bold text-sm">
-              CHI TIẾT SẢN PHẨM & DỮ LIỆU DB (MONGODB COMPASS)
-            </span>
-          </div>
-        }
-      >
-        {selectedProduct && (
-          <div className="font-mono text-xs pt-2 space-y-4">
-            <Tabs
-              defaultActiveKey="overview"
-              items={[
-                {
-                  key: "overview",
-                  label: (
-                    <span className="flex items-center gap-1">
-                      <Shirt className="w-3.5 h-3.5" />
-                      <span>Tổng quan</span>
-                    </span>
-                  ),
-                  children: (
-                    <div className="space-y-4">
-                      <div className="flex gap-4 items-start">
-                        <div className="w-24 h-24 border border-zinc-200 overflow-hidden shrink-0">
-                          <Image
-                            src={selectedProduct.thumbnail || ""}
-                            alt={selectedProduct.name}
-                            width="100%"
-                            height="100%"
-                            className="!object-cover"
-                          />
-                        </div>
-                        <div className="space-y-1 flex-1">
-                          <h2 className="text-sm font-bold text-zinc-950 uppercase">
-                            {selectedProduct.name}
-                          </h2>
-                          <p className="text-zinc-500 text-[11px]">
-                            SKU: <strong>{selectedProduct.sku}</strong> · Slug:{" "}
-                            <span className="text-blue-600 underline">
-                              {selectedProduct.slug}
-                            </span>
-                          </p>
-                          <div className="flex items-center gap-3 pt-1">
-                            <span className="text-sm font-black text-zinc-950">
-                              {selectedProduct.price.toLocaleString("vi-VN")} ₫
-                            </span>
-                            {selectedProduct.original_price && (
-                              <span className="text-xs text-zinc-400 line-through">
-                                Giá gốc: {selectedProduct.original_price.toLocaleString(
-                                  "vi-VN"
-                                )}{" "}
-                                ₫
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border border-zinc-200 p-3 bg-zinc-50 text-center">
-                        <div>
-                          <span className="text-zinc-400 text-[10px] block">TỔNG TỒN</span>
-                          <strong className="text-sm">{selectedProduct.stock}</strong>
-                        </div>
-                        <div>
-                          <span className="text-zinc-400 text-[10px] block">ĐÃ BÁN</span>
-                          <strong className="text-sm">{selectedProduct.sold || 0}</strong>
-                        </div>
-                        <div>
-                          <span className="text-zinc-400 text-[10px] block">TRỌNG LƯỢNG</span>
-                          <strong className="text-sm">{selectedProduct.weight || 300}g</strong>
-                        </div>
-                        <div>
-                          <span className="text-zinc-400 text-[10px] block">ĐÁNH GIÁ</span>
-                          <strong className="text-sm text-amber-600">
-                            ⭐ {selectedProduct.ratings?.average || 5.0} ({selectedProduct.ratings?.count || 0})
-                          </strong>
-                        </div>
-                      </div>
-
-                      <div className="border border-zinc-200 p-3">
-                        <span className="font-bold block text-zinc-800 mb-1">
-                          MÔ TẢ SẢN PHẨM:
-                        </span>
-                        <p className="text-zinc-600 leading-relaxed">
-                          {selectedProduct.description || "Chưa có mô tả chi tiết."}
-                        </p>
-                      </div>
-                    </div>
-                  ),
-                },
-                {
-                  key: "attributes_seo",
-                  label: (
-                    <span className="flex items-center gap-1">
-                      <TagIcon className="w-3.5 h-3.5" />
-                      <span>Thuộc tính & SEO</span>
-                    </span>
-                  ),
-                  children: (
-                    <div className="space-y-4">
-                      <div className="border border-zinc-200 p-3 space-y-2">
-                        <span className="font-bold block text-zinc-800">
-                          THUỘC TÍNH THỜI TRANG (ATTRIBUTES):
-                        </span>
-                        <div className="space-y-1">
-                          {selectedProduct.attributes?.map((attr) => (
-                            <div
-                              key={attr.name}
-                              className="flex justify-between border-b border-zinc-100 py-1"
-                            >
-                              <span className="text-zinc-500 font-bold">
-                                {attr.name}
-                              </span>
-                              <span className="text-zinc-900">{attr.value}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="border border-zinc-200 p-3 space-y-2">
-                        <span className="font-bold block text-zinc-800">
-                          TỐI ƯU TÌM KIẾM (SEO):
-                        </span>
-                        <div className="space-y-1 text-[11px]">
-                          <div>
-                            <span className="text-zinc-500">Meta Title: </span>
-                            <strong className="text-zinc-900">
-                              {selectedProduct.seo?.metaTitle || "Chưa thiết lập"}
-                            </strong>
-                          </div>
-                          <div>
-                            <span className="text-zinc-500">Meta Description: </span>
-                            <span className="text-zinc-700">
-                              {selectedProduct.seo?.metaDescription || "Chưa thiết lập"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1 flex-wrap pt-1">
-                            <span className="text-zinc-500">Keywords: </span>
-                            {selectedProduct.seo?.metaKeywords?.map((kw) => (
-                              <Tag key={kw} className="font-mono text-[10px]">
-                                {kw}
-                              </Tag>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ),
-                },
-                {
-                  key: "api_json",
-                  label: (
-                    <span className="flex items-center gap-1">
-                      <Code2 className="w-3.5 h-3.5" />
-                      <span>JSON DB (COMPASS VIEW)</span>
-                    </span>
-                  ),
-                  children: (
-                    <div className="bg-zinc-950 text-emerald-400 p-3 rounded-none overflow-x-auto max-h-96 text-[11px] font-mono leading-relaxed border border-black">
-                      <pre>{JSON.stringify(selectedProduct, null, 2)}</pre>
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          </div>
-        )}
-      </Modal>
 
       {/* 5. Modal / Drawer Tạo & Chỉnh sửa sản phẩm */}
       <CreateEditProduct

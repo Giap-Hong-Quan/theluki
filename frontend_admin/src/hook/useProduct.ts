@@ -83,6 +83,7 @@ export const useToggleActiveProduct = () => {
     onSuccess: () => {
       toast.success("Cập nhật trạng thái sản phẩm thành công");
       queryClient.invalidateQueries({ queryKey: ["allProducts"] });
+       queryClient.invalidateQueries({ queryKey: ["product"] });
     },
     onError: (error: any) => {
       toast.error(
