@@ -44,9 +44,6 @@ const productRouter = express.Router();
  *               name:
  *                 type: string
  *                 example: "Áo Hoodie Zip STORMSTU"
- *               original_price:
- *                 type: number
- *                 example: 200000
  *               price:
  *                 type: number
  *                 example: 139000

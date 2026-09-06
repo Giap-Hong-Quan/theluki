@@ -62,12 +62,7 @@ const ProductSchema = new mongoose.Schema(
             type: String,
             default: null
         },
-        original_price: { // Giá gốc / Giá niêm yết (không bắt buộc)
-            type: Number,
-            default: null,
-            min: 0
-        },
-        price: { // Giá bán thực tế (Giá sau giảm)
+        price: { // Giá bán thực tế
             type: Number,
             required: true,
             min: 0
@@ -108,10 +103,6 @@ const ProductSchema = new mongoose.Schema(
             min: 0
         },
         variants: [ColorVariantSchema], // Biến thể phân cấp: Màu sắc -> Danh sách Size & Tồn kho riêng
-        ratings: { // Điểm đánh giá trung bình & lượt đánh giá
-            average: { type: Number, default: 5, min: 1, max: 5 },
-            count: { type: Number, default: 0 }
-        },
         isFeatured: { // Sản phẩm nổi bật (HOT / Best Seller)
             type: Boolean,
             default: false

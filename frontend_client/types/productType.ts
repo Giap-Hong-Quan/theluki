@@ -16,7 +16,6 @@ export interface IProduct {
   slug: string;
   sku: string;
   price: number;
-  original_price?: number;
   category: {
     _id: string;
     name: string;

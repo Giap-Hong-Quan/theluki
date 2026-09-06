@@ -13,7 +13,6 @@ export interface ProductFormValues {
   name: string;
   sku?: string;
   price: number;
-  original_price?: number;
   category: string;
   collections?: string[];
   weight?: number;
@@ -430,7 +429,7 @@ const VariantSizesManager = ({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono font-bold block text-zinc-800">
-            CÁC SIZE & TỒN KHO CỦA MÀU NÀY:
+            CÁC SIZE & TỒN KHO:
           </span>
           <span className="text-[10px] font-mono px-1.5 py-0.5 bg-zinc-100 text-zinc-600 border border-zinc-200 font-bold">
             {fields.length} SIZE
@@ -822,7 +821,6 @@ const CreateEditProduct = ({
       name: "",
       sku: "",
       price: 0,
-      original_price: undefined,
       category: "",
       collections: [],
       weight: 300,
@@ -891,7 +889,6 @@ const CreateEditProduct = ({
           name: initialValues.name || "",
           sku: initialValues.sku || "",
           price: initialValues.price || 0,
-          original_price: initialValues.original_price || undefined,
           category:
             (typeof initialValues.category === "object"
               ? initialValues.category?._id
@@ -947,7 +944,6 @@ const CreateEditProduct = ({
           name: "",
           sku: "",
           price: 0,
-          original_price: undefined,
           category: categoryOptions[0]?.value || "",
           collections: [],
           weight: 300,
@@ -1026,9 +1022,6 @@ const CreateEditProduct = ({
         name: data.name.trim(),
         sku: data.sku?.trim() || undefined,
         price: Number(data.price),
-        original_price: data.original_price
-          ? Number(data.original_price)
-          : undefined,
         category: data.category,
         collections: data.collections,
         weight: Number(data.weight) || 300,
@@ -1061,9 +1054,6 @@ const CreateEditProduct = ({
       const payload: CreateProductPayload = {
         name: data.name.trim(),
         price: Number(data.price),
-        original_price: data.original_price
-          ? Number(data.original_price)
-          : undefined,
         category: data.category,
         collections: data.collections,
         weight: Number(data.weight) || 300,
@@ -1290,10 +1280,10 @@ const CreateEditProduct = ({
                 GIÁ BÁN & VẬN CHUYỂN
               </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-zinc-700 mb-1 font-semibold text-xs font-sans">
-                    GIÁ BÁN THỰC TẾ (₫) <span className="text-red-500">*</span>
+                    GIÁ BÁN (₫) <span className="text-red-500">*</span>
                   </label>
                   <Controller
                     name="price"
@@ -1316,27 +1306,6 @@ const CreateEditProduct = ({
                       {errors.price.message}
                     </p>
                   )}
-                </div>
-
-                <div>
-                  <label className="block text-zinc-700 mb-1 font-semibold text-xs font-sans">
-                    GIÁ GỐC NIÊM YẾT (₫)
-                  </label>
-                  <Controller
-                    name="original_price"
-                    control={control}
-                    render={({ field }) => (
-                      <FormattedNumberInput
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="VD: 550.000"
-                        className="w-full h-9 px-3 border border-zinc-300 focus:border-black outline-none bg-white rounded-none font-sans text-xs text-zinc-500"
-                      />
-                    )}
-                  />
-                  <span className="text-[10px] text-zinc-400 font-mono">
-                    Hiển thị gạch ngang giảm giá
-                  </span>
                 </div>
 
                 <div>

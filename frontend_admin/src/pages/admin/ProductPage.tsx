@@ -228,17 +228,6 @@ const ProductPage = () => {
       },
     },
     {
-      key: "original_price",
-      title: "GIÁ GỐC",
-      width: 120,
-      align: "right",
-      render: (_, record) => (
-        <span className="font-mono text-xs text-zinc-400 line-through">
-          {record.original_price ? formatPrice(record.original_price) : "—"}
-        </span>
-      ),
-    },
-    {
       key: "price",
       title: "GIÁ BÁN",
       width: 120,
@@ -285,18 +274,6 @@ const ProductPage = () => {
       render: (_, record) => (
         <span className="font-mono text-xs text-zinc-600">
           {record.weight || 300}g
-        </span>
-      ),
-    },
-    {
-      key: "ratings",
-      title: "ĐÁNH GIÁ",
-      width: 95,
-      align: "center",
-      render: (_, record) => (
-        <span className="font-mono text-xs font-semibold inline-flex items-center gap-1 text-amber-600">
-          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-          <span>{record.ratings?.average || 5.0}</span>
         </span>
       ),
     },

@@ -184,21 +184,16 @@ const ProductDetailPage = () => {
       </div>
 
       {/* 2. Thẻ chỉ số nổi bật (Stats Matrix) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Giá bán */}
         <div className="bg-white border border-black p-3.5 shadow-2xs">
           <div className="text-[11px] text-zinc-500 uppercase flex items-center gap-1 mb-1">
             <DollarSign className="w-3.5 h-3.5 text-zinc-600" />
-            <span>GIÁ BÁN THỰC TẾ</span>
+            <span>GIÁ BÁN</span>
           </div>
           <div className="text-base sm:text-lg font-black text-zinc-950 font-sans tracking-tight">
             {formatPrice(product.price)}
           </div>
-          {product.original_price && (
-            <div className="text-[11px] text-zinc-400 line-through mt-0.5 font-sans">
-              {formatPrice(product.original_price)}
-            </div>
-          )}
         </div>
 
         {/* Tồn kho */}
@@ -241,21 +236,6 @@ const ProductDetailPage = () => {
             {product.weight || 300} <span className="text-xs font-normal">gram</span>
           </div>
           <div className="text-[11px] text-zinc-400 mt-0.5">Chuẩn cước ViettelPost</div>
-        </div>
-
-        {/* Đánh giá */}
-        <div className="bg-white border border-black p-3.5 shadow-2xs">
-          <div className="text-[11px] text-zinc-500 uppercase flex items-center gap-1 mb-1">
-            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-            <span>ĐÁNH GIÁ</span>
-          </div>
-          <div className="text-base sm:text-lg font-black text-amber-600 flex items-center gap-1 font-sans">
-            <span>{product.ratings?.average || 5.0}</span>
-            <span className="text-xs text-zinc-400">/ 5.0</span>
-          </div>
-          <div className="text-[11px] text-zinc-400 mt-0.5">
-            {product.ratings?.count || 0} lượt nhận xét
-          </div>
         </div>
       </div>
 

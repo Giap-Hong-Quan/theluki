@@ -25,7 +25,6 @@ export default function ProductCard({ product: propProduct }: ProductCardProps) 
     name: propProduct?.name || "Áo khoác dạ oversize LUKI 01",
     slug: propProduct?.slug || "ao-khoac-da-oversize-luki-01",
     price: propProduct?.price ?? 1890000,
-    original_price: propProduct?.original_price,
     image:
       propProduct?.thumbnail ||
       propProduct?.image ||

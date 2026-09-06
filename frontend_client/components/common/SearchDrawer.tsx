@@ -347,11 +347,6 @@ export default function SearchDrawer({ isOpen, onClose }: SearchDrawerProps) {
                           <span className="text-[11px] sm:text-xs font-bold text-neutral-900 font-mono">
                             {formatPrice(prod.price)}
                           </span>
-                          {prod.original_price && prod.original_price > prod.price && (
-                            <span className="text-[10px] text-neutral-400 line-through font-mono">
-                              {formatPrice(prod.original_price)}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </Link>

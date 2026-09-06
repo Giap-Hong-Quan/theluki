@@ -21,11 +21,6 @@ export interface IColorVariant {
   sizes: IProductSize[];
 }
 
-export interface IProductRatings {
-  average: number;
-  count: number;
-}
-
 export interface IProductSeo {
   metaTitle?: string;
   metaDescription?: string;
@@ -55,7 +50,6 @@ export interface ProductItem {
   description?: string;
   attributes?: IProductAttribute[];
   size_chart?: string | null;
-  original_price?: number | null;
   price: number;
   category: IProductCategoryPopulated;
   collections?: IProductCollectionPopulated[];
@@ -65,7 +59,6 @@ export interface ProductItem {
   weight?: number;
   sold?: number;
   variants: IColorVariant[];
-  ratings?: IProductRatings;
   isFeatured?: boolean;
   seo?: IProductSeo;
   isActive: boolean;
@@ -115,7 +108,6 @@ export interface CreateProductPayload {
   description?: string;
   attributes?: IProductAttribute[];
   size_chart?: string | null;
-  original_price?: number;
   price: number;
   category: string;
   collections?: string[];
@@ -134,7 +126,6 @@ export interface UpdateProductPayload {
   description?: string;
   attributes?: IProductAttribute[];
   size_chart?: string | null;
-  original_price?: number;
   price?: number;
   category?: string;
   collections?: string[];

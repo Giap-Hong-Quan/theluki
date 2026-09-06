@@ -5,10 +5,24 @@ import { GetProductsParams } from "@/types/productType";
 export const PRODUCT_KEYS = {
   all: ["products"] as const,
   list: (params?: GetProductsParams) => [...PRODUCT_KEYS.all, "list", params] as const,
+  bySlug: (slug: string) => [...PRODUCT_KEYS.all, "bySlug", slug] as const,
   byCategorySlug: (categorySlug: string, params?: Omit<GetProductsParams, "category">) =>
     [...PRODUCT_KEYS.all, "byCategorySlug", categorySlug, params] as const,
   byCollectionSlug: (collectionSlug: string, params?: Omit<GetProductsParams, "collection">) =>
     [...PRODUCT_KEYS.all, "byCollectionSlug", collectionSlug, params] as const,
+};
+
+/**
+ * Hook lấy chi tiết sản phẩm theo Slug (Client / SEO)
+ */
+export const useProductBySlug = (slug: string) => {
+  return useQuery({
+    queryKey: PRODUCT_KEYS.bySlug(slug),
+    queryFn: () => productService.getProductBySlug(slug),
+    select: (res) => res?.data,
+    enabled: !!slug,
+    staleTime: 5 * 60 * 1000,
+  });
 };
 
 /**

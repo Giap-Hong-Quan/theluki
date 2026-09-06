@@ -34,9 +34,6 @@ export const createProductZod = z.object({
             value: z.string().trim()
         })).optional().default([]),
         size_chart: z.string().trim().optional().nullable(),
-        // original_price: z
-        //     .number({ required_error: "Giá gốc là bắt buộc" })
-        //     .min(0, "Giá gốc không được nhỏ hơn 0"),
         price: z
             .number({ required_error: "Giá bán là bắt buộc" })
             .min(0, "Giá bán không được nhỏ hơn 0"),
@@ -69,7 +66,6 @@ export const updateProductZod = z.object({
             value: z.string().trim()
         })).optional(),
         size_chart: z.string().trim().optional().nullable(),
-        original_price: z.number().min(0, "Giá gốc không được nhỏ hơn 0").optional(),
         price: z.number().min(0, "Giá bán không được nhỏ hơn 0").optional(),
         category: z.string().min(1, "ID danh mục không được để trống").optional(),
         collections: z.array(z.string().trim()).optional(),

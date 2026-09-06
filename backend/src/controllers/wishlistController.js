@@ -17,7 +17,7 @@ export const getWishlistController = async (req, res, next) => {
             .populate({
                 path: "wishlist",
                 match: { deletedAt: null },
-                select: "name slug price original_price thumbnail images category stock isActive",
+                select: "name slug price thumbnail images category stock isActive",
                 populate: {
                     path: "category",
                     select: "name slug image"
