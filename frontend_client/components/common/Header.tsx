@@ -34,7 +34,6 @@ export default function Header() {
   const { data: categories = [], isLoading: isCategoriesLoading } = useCategories({
     isActive: true,
     isDeleted: false,
-    sizePage: 0,
   });
 
   // State

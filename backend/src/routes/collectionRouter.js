@@ -1,7 +1,6 @@
 import express from "express";
 import {
     createCollectionController,
-    reorderCollectionController,
     updateCollectionController,
     getCollectionByIdController,
     getCollectionBySlugController,
@@ -47,14 +46,6 @@ const collectionRouter = express.Router();
  *               thumbnail_url:
  *                 type: string
  *                 example: "https://example.com/thumb.jpg"
- *               products:
- *                 type: array
- *                 items:
- *                   type: string
- *                 example: []
- *               order:
- *                 type: integer
- *                 example: 1
  *               isFeatured:
  *                 type: boolean
  *                 example: true
@@ -87,46 +78,6 @@ const collectionRouter = express.Router();
  *         description: Lỗi hệ thống
  */
 collectionRouter.post("/", validate(createCollectionZod), verifyToken, authorizeRoles("admin", "staff"), createCollectionController);
-
-/**
- * @swagger
- * /collection/reorder:
- *   put:
- *     summary: Cập nhật thứ tự sắp xếp bộ sưu tập hàng loạt (Reorder Drag & Drop)
- *     tags: [Collection]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - id
- *                 - order
- *               properties:
- *                 id:
- *                   type: string
- *                   example: "67a8aecbf19fc340b0062caf"
- *                 order:
- *                   type: integer
- *                   example: 1
- *     responses:
- *       200:
- *         description: Cập nhật thứ tự thành công
- *       400:
- *         description: Dữ liệu gửi lên không hợp lệ
- *       401:
- *         description: Chưa đăng nhập
- *       403:
- *         description: Không có quyền truy cập
- *       500:
- *         description: Lỗi hệ thống
- */
-collectionRouter.put("/reorder", verifyToken, authorizeRoles("admin", "staff"), reorderCollectionController);
 
 /**
  * @swagger

@@ -1,47 +1,45 @@
-import mongoose from "mongoose";
 import Banner from "../models/Banner.js";
-import Collection from "../models/Collection.js";
 import ApiError from "../exceptions/ApiError.js";
 import { success } from "../utils/success.js";
 
 // Tạo mới banner (Admin / Staff)
 export const createBannerController = async (req, res, next) => {
     try {
-        const { title, subtitle, collection_id, custom_image, position, order, isActive } = req.body;
+        const { image, custom_image, position = "home_hero", isActive = true } = req.body;
+        const finalImage = (image || custom_image || "").trim();
 
-        // 1. Kiểm tra tồn tại Bộ sưu tập
-        const existCollection = await Collection.findById(collection_id);
-        if (!existCollection || existCollection.deletedAt !== null) {
-            throw new ApiError(404, "Bộ sưu tập được chọn không tồn tại hoặc đã bị xóa");
+        if (!finalImage) {
+            throw new ApiError(400, "Hình ảnh banner là bắt buộc");
         }
 
-        // 2. Tạo mới banner
+        const targetPosition = position === "popup" ? "popup" : "home_hero";
+        const isItemActive = typeof isActive === "boolean" ? isActive : true;
+
+        // Nếu banner mới được kích hoạt -> tắt toàn bộ banner cùng vị trí đang active
+        if (isItemActive) {
+            await Banner.updateMany(
+                { position: targetPosition, isActive: true },
+                { $set: { isActive: false } }
+            );
+        }
+
         const newBanner = await Banner.create({
-            title: title.trim(),
-            subtitle: subtitle ? subtitle.trim() : "",
-            collection_id,
-            custom_image: custom_image || null,
-            position: position || "home_hero",
-            order: typeof order === "number" ? order : 0,
-            isActive: typeof isActive === "boolean" ? isActive : true,
+            image: finalImage,
+            position: targetPosition,
+            isActive: isItemActive,
             createdBy: req.user?._id || req.user?.id || null
         });
 
-        const populatedBanner = await Banner.findById(newBanner._id).populate(
-            "collection_id",
-            "name slug banner_url thumbnail_url description"
-        );
-
-        return success(res, populatedBanner, "Tạo banner thành công", 201);
+        return success(res, newBanner, "Tạo banner thành công", 201);
     } catch (error) {
         next(error);
     }
 };
 
-// Lấy danh sách banner (Public & Admin)
+// Lấy danh sách toàn bộ banner (Public & Admin, không phân trang)
 export const getAllBannersController = async (req, res, next) => {
     try {
-        const { page = 1, sizePage = 10, position, isActive, search } = req.query;
+        const { position, isActive } = req.query;
 
         const query = {};
 
@@ -53,32 +51,43 @@ export const getAllBannersController = async (req, res, next) => {
             query.isActive = isActive;
         }
 
-        if (search && search.trim() !== "") {
-            query.title = { $regex: search.trim(), $options: "i" };
-        }
-
-        const limit = Number(sizePage);
-        const skip = limit > 0 ? (Number(page) - 1) * limit : 0;
-
-        const [banners, count] = await Promise.all([
-            Banner.find(query)
-                .populate("collection_id", "name slug banner_url thumbnail_url description")
-                .sort({ order: 1, createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
-                .lean(),
-            Banner.countDocuments(query)
+        const [banners, totalBanner, totalHomeHero, totalPopup] = await Promise.all([
+            Banner.find(query).sort({ createdAt: -1 }).lean(),
+            Banner.countDocuments(),
+            Banner.countDocuments({ position: "home_hero" }),
+            Banner.countDocuments({ position: "popup" })
         ]);
 
         const result = {
             banners,
-            totalBanner: count,
-            totalPage: limit > 0 ? Math.ceil(count / limit) : 1,
-            currentPage: Number(page),
-            sizePage: limit
+            totalBanner,
+            totalHomeHero,
+            totalPopup
         };
 
         return success(res, result, "Lấy danh sách banner thành công", 200);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Lấy banner đang active cho Client (1 home_hero, 1 popup)
+export const getActiveBannersController = async (req, res, next) => {
+    try {
+        const [homeHero, popup] = await Promise.all([
+            Banner.findOne({ position: "home_hero", isActive: true }).lean(),
+            Banner.findOne({ position: "popup", isActive: true }).lean()
+        ]);
+
+        return success(
+            res,
+            {
+                home_hero: homeHero || null,
+                popup: popup || null
+            },
+            "Lấy danh sách banner active thành công",
+            200
+        );
     } catch (error) {
         next(error);
     }
@@ -89,11 +98,7 @@ export const getBannerByIdController = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const banner = await Banner.findById(id).populate(
-            "collection_id",
-            "name slug banner_url thumbnail_url description"
-        );
-
+        const banner = await Banner.findById(id).lean();
         if (!banner) {
             throw new ApiError(404, "Không tìm thấy banner");
         }
@@ -108,30 +113,35 @@ export const getBannerByIdController = async (req, res, next) => {
 export const updateBannerController = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { title, subtitle, collection_id, custom_image, position, order, isActive } = req.body;
+        const { image, custom_image, position, isActive } = req.body;
 
         const existBanner = await Banner.findById(id);
         if (!existBanner) {
             throw new ApiError(404, "Không tìm thấy banner");
         }
 
-        // Nếu đổi sang Bộ sưu tập khác -> kiểm tra tồn tại
-        if (collection_id && collection_id !== existBanner.collection_id.toString()) {
-            const existCollection = await Collection.findById(collection_id);
-            if (!existCollection || existCollection.deletedAt !== null) {
-                throw new ApiError(404, "Bộ sưu tập mới không tồn tại hoặc đã bị xóa");
-            }
+        const targetPosition = position || existBanner.position;
+        const willBeActive = typeof isActive === "boolean" ? isActive : existBanner.isActive;
+
+        // Nếu banner này sẽ active (isActive: true) -> tắt tất cả các banner khác cùng vị trí
+        if (willBeActive) {
+            await Banner.updateMany(
+                { _id: { $ne: id }, position: targetPosition, isActive: true },
+                { $set: { isActive: false } }
+            );
         }
 
-        const updateData = { ...req.body };
-        if (title) updateData.title = title.trim();
-        if (subtitle !== undefined) updateData.subtitle = subtitle.trim();
+        const updateData = {};
+        const finalImage = (image || custom_image || "").trim();
+        if (finalImage) updateData.image = finalImage;
+        if (position) updateData.position = position;
+        if (typeof isActive === "boolean") updateData.isActive = isActive;
 
         const updatedBanner = await Banner.findByIdAndUpdate(
             id,
             { $set: updateData },
             { new: true, runValidators: true }
-        ).populate("collection_id", "name slug banner_url thumbnail_url description");
+        );
 
         return success(res, updatedBanner, "Cập nhật banner thành công", 200);
     } catch (error) {
@@ -149,11 +159,21 @@ export const toggleActiveBannerController = async (req, res, next) => {
             throw new ApiError(404, "Không tìm thấy banner");
         }
 
+        const newActiveState = !existBanner.isActive;
+
+        // Nếu bật lên (newActiveState === true) -> tắt tất cả các banner khác cùng position
+        if (newActiveState) {
+            await Banner.updateMany(
+                { _id: { $ne: id }, position: existBanner.position, isActive: true },
+                { $set: { isActive: false } }
+            );
+        }
+
         const updatedBanner = await Banner.findByIdAndUpdate(
             id,
-            { isActive: !existBanner.isActive },
+            { $set: { isActive: newActiveState } },
             { new: true }
-        ).populate("collection_id", "name slug banner_url thumbnail_url description");
+        );
 
         return success(
             res,
@@ -179,30 +199,6 @@ export const deleteBannerController = async (req, res, next) => {
         await Banner.findByIdAndDelete(id);
 
         return success(res, null, "Xóa banner thành công", 200);
-    } catch (error) {
-        next(error);
-    }
-};
-
-// Cập nhật thứ tự hiển thị banner (Admin / Staff)
-export const reorderBannersController = async (req, res, next) => {
-    try {
-        const { items } = req.body; // Mảng [{ id: "...", order: 1 }, ...]
-
-        if (!Array.isArray(items) || items.length === 0) {
-            throw new ApiError(400, "Danh sách sắp xếp không hợp lệ");
-        }
-
-        const bulkOps = items.map((item) => ({
-            updateOne: {
-                filter: { _id: item.id },
-                update: { $set: { order: item.order } }
-            }
-        }));
-
-        await Banner.bulkWrite(bulkOps);
-
-        return success(res, null, "Cập nhật thứ tự banner thành công", 200);
     } catch (error) {
         next(error);
     }

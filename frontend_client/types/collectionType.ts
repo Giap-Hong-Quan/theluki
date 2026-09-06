@@ -6,8 +6,7 @@ export interface ICollection {
   description?: string;
   banner_url?: string;
   thumbnail_url?: string;
-  products?: any[];
-  order?: number;
+  productCount?: number;
   isActive?: boolean;
   isFeatured?: boolean;
   deletedAt?: string | null;

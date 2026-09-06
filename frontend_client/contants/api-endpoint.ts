@@ -36,6 +36,7 @@ export const API_ENDPOINTS = {
   },
   BANNERS: {
     GET_ALL: "/banner",
+    GET_ACTIVE: "/banner/active",
     GET_BY_ID: (id: string) => `/banner/${id}`,
   },
   CART: {

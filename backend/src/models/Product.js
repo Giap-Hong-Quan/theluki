@@ -17,6 +17,7 @@ const ColorVariantSchema = new mongoose.Schema(
         color: { type: String, trim: true, required: true },    // Ví dụ: "Màu Đen", "Màu Trắng", "Xanh Navy"
         image: { type: String, default: null },                 // URL hình ảnh riêng đại diện cho màu sắc này (giống Shopee)
         sku: { type: String, trim: true, uppercase: true, default: "" }, // Mã SKU riêng đại diện cho biến thể màu này (VD: DXCVMD-2302-CREAM)
+        isActive: { type: Boolean, default: true },             // Trạng thái bật/tắt bán riêng cho biến thể màu này
         sizes: [SizeOptionSchema]                               // Danh sách các Size & Tồn kho thuộc màu sắc này
     },
     { _id: true }

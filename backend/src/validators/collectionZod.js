@@ -16,8 +16,6 @@ export const createCollectionZod = z.object({
         description: z.string().trim().optional(),
         banner_url: z.string().trim().nullable().optional(),
         thumbnail_url: z.string().trim().nullable().optional(),
-        products: z.array(z.string().trim()).optional(),
-        order: z.number().min(0, "Thứ tự sắp xếp phải lớn hơn hoặc bằng 0").optional(),
         isFeatured: z.boolean().optional(),
         seo: seoSchema.optional()
     })
@@ -33,8 +31,6 @@ export const updateCollectionZod = z.object({
         description: z.string().trim().optional(),
         banner_url: z.string().trim().nullable().optional(),
         thumbnail_url: z.string().trim().nullable().optional(),
-        products: z.array(z.string().trim()).optional(),
-        order: z.number().min(0, "Thứ tự sắp xếp phải lớn hơn hoặc bằng 0").optional(),
         seo: seoSchema.optional(),
         isActive: z.boolean().optional()
     })

@@ -49,7 +49,7 @@ const CustomerPage = () => {
   const handleDeleteUser=(id:string)=>{
     deleteUser(id);
   }
-  const handleEditUser=(id:string)=>{
+  const handleEditUser=(_id:string)=>{
     setOpenModal(true);
     setTitle('Cập nhật khách hàng');
   }
@@ -420,7 +420,7 @@ const columns: ColumnType<UserItem>[] = [
           <Form
             form={form}
             initialValues={{ isActive: true }}
-            onValuesChange={(changedValues, allValues) => {
+            onValuesChange={(_changedValues, allValues) => {
               handleDebouncedFilter(allValues);
             }}
             layout="inline" className="w-full flex flex-wrap items-center">

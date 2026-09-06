@@ -1,30 +1,26 @@
-import { ICollection } from "./collectionType";
-
 export interface IBanner {
   _id: string;
-  title: string;
-  subtitle?: string;
-  collection_id: ICollection;
-  custom_image?: string | null;
-  position: "home_hero" | "home_sub" | "popup";
-  order: number;
+  image: string;
+  position: "home_hero" | "popup";
   isActive: boolean;
+  createdBy?: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
+export interface IActiveBanners {
+  home_hero: IBanner | null;
+  popup: IBanner | null;
+}
+
 export interface GetBannersParams {
-  page?: number;
-  sizePage?: number;
-  position?: "home_hero" | "home_sub" | "popup";
+  position?: "home_hero" | "popup";
   isActive?: boolean;
-  search?: string;
 }
 
 export interface GetBannersResponse {
   banners: IBanner[];
   totalBanner: number;
-  totalPage: number;
-  currentPage: number;
-  sizePage: number;
+  totalHomeHero: number;
+  totalPopup: number;
 }

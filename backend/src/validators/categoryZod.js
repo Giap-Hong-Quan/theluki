@@ -7,7 +7,6 @@ export const createCategoryZod = z.object({
             .trim()
             .min(1, "Tên danh mục không được để trống"),
         image: z.string().optional().nullable(),
-        order: z.number().int().min(0).optional(),
         seo: z
             .object({
                 metaTitle: z.string().max(70, "Meta title tối đa 70 ký tự").optional(),
@@ -25,7 +24,6 @@ export const updateCategoryZod = z.object({
     body: z.object({
         name: z.string().trim().min(1, "Tên danh mục không được để trống").optional(),
         image: z.string().optional().nullable(),
-        order: z.number().int().min(0).optional(),
         seo: z
             .object({
                 metaTitle: z.string().max(70, "Meta title tối đa 70 ký tự").optional(),
@@ -48,8 +46,6 @@ const parseBooleanQuery = z.enum(["true", "false"]).transform((val) => val === "
 
 export const getCategoriesQueryZod = z.object({
     query: z.object({
-        page: z.coerce.number().int().min(1, "Trang phải lớn hơn 0").default(1),
-        sizePage: z.coerce.number().int().min(0, "Số lượng danh mục mỗi trang không được nhỏ hơn 0").max(100, "Số lượng tối đa 100").default(10),
         search: z.string().trim().optional(),
         isActive: parseBooleanQuery,
         isDeleted: parseBooleanQuery

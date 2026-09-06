@@ -10,7 +10,6 @@ export default function CategoryTabs() {
   const { data: categories = [], isLoading } = useCategories({
     isActive: true,
     isDeleted: false,
-    sizePage: 0,
   });
   const handleSelectCategory = (key: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -43,6 +42,7 @@ export default function CategoryTabs() {
           {cat.name}
         </span>
       ),
+      
     })),
   ];
 

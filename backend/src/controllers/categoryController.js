@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { success } from "../utils/success.js";
 import Category from "../models/Category.js";
+import Product from "../models/Product.js";
 import ApiError from "../exceptions/ApiError.js";
 import removeVietnameseTones from "../utils/removeVietnameseTones.js";
 
@@ -19,39 +20,7 @@ export const createCategoryController = async (req, res, next) => {
     }
 };
 
-// 2. Cập nhật thứ tự sắp xếp danh mục hàng loạt (Reorder Drag & Drop)
-export const reorderCategoryController = async (req, res, next) => {
-    try {
-        const list = Array.isArray(req.body) ? req.body : req.body?.orders;
-
-        if (!Array.isArray(list) || list.length === 0) {
-            throw new ApiError(400, "Dữ liệu danh sách sắp xếp (orders) không hợp lệ");
-        }
-
-        const bulkOperations = list.map((item) => {
-            if (!item.id || !mongoose.Types.ObjectId.isValid(item.id)) {
-                throw new ApiError(400, `Id danh mục ${item.id} không đúng định dạng`);
-            }
-            if (typeof item.order !== "number") {
-                throw new ApiError(400, `Thứ tự (order) của ID ${item.id} phải là số`);
-            }
-            return {
-                updateOne: {
-                    filter: { _id: item.id },
-                    update: { $set: { order: item.order } }
-                }
-            };
-        });
-
-        await Category.bulkWrite(bulkOperations);
-
-        success(res, null, "Cập nhật thứ tự danh mục thành công", 200);
-    } catch (error) {
-        next(error);
-    }
-};
-
-// 3. Cập nhật thông tin danh mục
+// 2. Cập nhật thông tin danh mục
 export const updateCategoryController = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -209,24 +178,21 @@ export const restoreCategoryController = async (req, res, next) => {
     }
 };
 
-// Lấy danh sách danh mục (Phân trang + Tìm kiếm + Lọc mở rộng: isDeleted, isActive)
+// Lấy danh sách toàn bộ danh mục (Tìm kiếm + Lọc mở rộng: isDeleted, isActive - Không phân trang)
 export const getAllCategoryController = async (req, res, next) => {
     try {
-        const { page = 1, sizePage = 10, search, isDeleted, isActive } = req.query;
-
+        const { search, isDeleted, isActive } = req.query;
         const query = {};
-
-        // 1. Lọc theo trạng thái xóa mềm (Đã xóa vs Chưa xóa)
-        if (isDeleted === true) {
+        if (isDeleted === true || isDeleted === "true") {
             query.deletedAt = { $ne: null };
         } else {
             query.deletedAt = null;
         }
-        // 2. Lọc theo trạng thái hoạt động (isActive)
-        if (typeof isActive === "boolean") {
-            query.isActive = isActive;
+        if (isActive === true || isActive === "true") {
+            query.isActive = true;
+        } else if (isActive === false || isActive === "false") {
+            query.isActive = false;
         }
-        // 3. Lọc tìm kiếm theo tên có dấu và không dấu
         if (search && search.trim() !== "") {
             const searchTrim = search.trim();
             const cleanSearch = removeVietnameseTones(searchTrim);
@@ -235,24 +201,46 @@ export const getAllCategoryController = async (req, res, next) => {
                 { noAccentName: { $regex: cleanSearch, $options: "i" } }
             ];
         }
-        // Phân trang (Nếu sizePage = 0, Mongoose .limit(0) sẽ tự động lấy toàn bộ)
-        const limit = sizePage;
-        const skip = limit > 0 ? (page - 1) * limit : 0;
-        const [categories, count] = await Promise.all([
+        const [categories, totalCategory, totalActive, totalInactive] = await Promise.all([
             Category.find(query)
-                .sort({ order: 1, createdAt: -1 })
-                .collation({ locale: "vi", strength: 1 })
-                .skip(skip)
-                .limit(limit)
+                .sort({ createdAt: -1 })
                 .lean(),
-            Category.countDocuments(query)
+            Category.countDocuments(query),
+            query.isActive === false ? 0 : Category.countDocuments({ ...query, isActive: true }),
+            query.isActive === true ? 0 : Category.countDocuments({ ...query, isActive: false })
         ]);
+
+        // Đếm số lượng sản phẩm chuẩn thời gian thực qua MongoDB Aggregate
+        const categoryIds = categories.map((c) => c._id);
+        const productCounts = categoryIds.length > 0
+            ? await Product.aggregate([
+                  {
+                      $match: {
+                          category: { $in: categoryIds },
+                          deletedAt: null
+                      }
+                  },
+                  {
+                      $group: {
+                          _id: "$category",
+                          count: { $sum: 1 }
+                      }
+                  }
+              ])
+            : [];
+
+        const countMap = new Map(productCounts.map((item) => [item._id.toString(), item.count]));
+
+        const categoriesWithCount = categories.map((cat) => ({
+            ...cat,
+            productCount: countMap.get(cat._id.toString()) || 0
+        }));
+
         const result = {
-            categories,
-            totalCategory: count,
-            totalPage: limit > 0 ? Math.ceil(count / limit) : 1,
-            currentPage: page,
-            sizePage: limit
+            categories: categoriesWithCount,
+            totalCategory,
+            totalActive,
+            totalInactive
         };
         success(res, result, "Lấy danh sách danh mục thành công", 200);
     } catch (error) {

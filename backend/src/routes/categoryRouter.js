@@ -1,7 +1,6 @@
 import express from "express";
 import {
     createCategoryController,
-    reorderCategoryController,
     updateCategoryController,
     getCategoryByIdController,
     getCategoryBySlugController,
@@ -43,10 +42,6 @@ const categoryRouter = express.Router();
  *                 nullable: true
  *                 description: URL hình ảnh đại diện danh mục
  *                 example: "https://res.cloudinary.com/demo/image/upload/v12345/category.jpg"
- *               order:
- *                 type: integer
- *                 description: Thứ tự hiển thị
- *                 example: 1
  *               seo:
  *                 type: object
  *                 properties:
@@ -76,47 +71,6 @@ const categoryRouter = express.Router();
  *         description: Lỗi hệ thống
  */
 categoryRouter.post("/", validate(createCategoryZod), verifyToken, authorizeRoles("admin", "staff"), createCategoryController);
-
-/**
- * @swagger
- * /category/reorder:
- *   put:
- *     summary: Cập nhật thứ tự sắp xếp danh mục hàng loạt (Reorder Drag & Drop)
- *     tags: [Category]
- *     description: Cập nhật lại thứ tự (`order`) của nhiều danh mục cùng lúc (Yêu cầu quyền admin hoặc staff).
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: array
- *             items:
- *               type: object
- *               required:
- *                 - id
- *                 - order
- *               properties:
- *                 id:
- *                   type: string
- *                   example: "67a8aecbf19fc340b0062caf"
- *                 order:
- *                   type: integer
- *                   example: 1
- *     responses:
- *       200:
- *         description: Cập nhật thứ tự danh mục thành công
- *       400:
- *         description: Dữ liệu gửi lên không hợp lệ
- *       401:
- *         description: Chưa đăng nhập
- *       403:
- *         description: Không có quyền truy cập
- *       500:
- *         description: Lỗi hệ thống
- */
-categoryRouter.put("/reorder", verifyToken, authorizeRoles("admin", "staff"), reorderCategoryController);
 
 /**
  * @swagger
@@ -313,19 +267,9 @@ categoryRouter.put("/:id/restore", verifyToken, authorizeRoles("admin", "staff")
  * @swagger
  * /category:
  *   get:
- *     summary: Lấy danh sách danh mục (Hỗ trợ Phân trang, Tìm kiếm, Thùng rác, Bật/Tắt, Lấy toàn bộ)
+ *     summary: Lấy danh sách toàn bộ danh mục (Tìm kiếm, Thùng rác, Bật/Tắt - Không phân trang)
  *     tags: [Category]
  *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: sizePage
- *         schema:
- *           type: integer
- *           default: 10
  *       - in: query
  *         name: search
  *         schema:
@@ -344,7 +288,7 @@ categoryRouter.put("/:id/restore", verifyToken, authorizeRoles("admin", "staff")
  *         description: Lọc theo trạng thái true (đang bật) hoặc false (đang tắt)
  *     responses:
  *       200:
- *         description: Lấy danh sách thành công
+ *         description: Lấy danh sách danh mục thành công
  *       500:
  *         description: Lỗi hệ thống
  */

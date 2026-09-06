@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Collection from "../models/Collection.js";
+import Product from "../models/Product.js";
 import ApiError from "../exceptions/ApiError.js";
 import { success } from "../utils/success.js";
 
@@ -32,35 +33,7 @@ export const createCollectionController = async (req, res, next) => {
     }
 };
 
-// 2. Cập nhật thứ tự sắp xếp bộ sưu tập hàng loạt (Reorder Drag & Drop)
-export const reorderCollectionController = async (req, res, next) => {
-    try {
-        const items = req.body;
-        if (!Array.isArray(items) || items.length === 0) {
-            throw new ApiError(400, "Dữ liệu cập nhật thứ tự phải là một mảng danh sách bộ sưu tập");
-        }
-
-        const bulkOperations = items.map(item => {
-            if (!item.id || !mongoose.Types.ObjectId.isValid(item.id)) {
-                throw new ApiError(400, `ID '${item.id}' không đúng định dạng ObjectId`);
-            }
-            return {
-                updateOne: {
-                    filter: { _id: item.id },
-                    update: { $set: { order: Number(item.order) || 0 } }
-                }
-            };
-        });
-
-        await Collection.bulkWrite(bulkOperations);
-
-        return success(res, null, "Cập nhật thứ tự bộ sưu tập thành công", 200);
-    } catch (error) {
-        next(error);
-    }
-};
-
-// 3. Cập nhật thông tin bộ sưu tập (Admin / Staff)
+// 2. Cập nhật thông tin bộ sưu tập (Admin / Staff)
 export const updateCollectionController = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -92,7 +65,7 @@ export const updateCollectionController = async (req, res, next) => {
             id,
             { $set: updateData },
             { new: true, runValidators: true }
-        ).populate("products", "name price original_price thumbnail slug sku stock");
+        );
 
         return success(res, updatedCollection, "Cập nhật bộ sưu tập thành công", 200);
     } catch (error) {
@@ -108,10 +81,16 @@ export const getCollectionByIdController = async (req, res, next) => {
             throw new ApiError(400, "ID bộ sưu tập không đúng định dạng");
         }
 
-        const collection = await Collection.findById(id).populate("products", "name price original_price thumbnail slug sku stock");
+        const collection = await Collection.findById(id).lean();
         if (!collection) {
             throw new ApiError(404, "Bộ sưu tập không tồn tại");
         }
+
+        const actualCount = await Product.countDocuments({
+            collections: id,
+            deletedAt: null
+        });
+        collection.productCount = actualCount;
 
         return success(res, collection, `Lấy thông tin bộ sưu tập: ${collection.name}`, 200);
     } catch (error) {
@@ -130,11 +109,17 @@ export const getCollectionBySlugController = async (req, res, next) => {
         const collection = await Collection.findOne({
             slug: slug.toLowerCase().trim(),
             deletedAt: null
-        }).populate("products", "name price original_price thumbnail slug sku stock");
+        }).lean();
 
         if (!collection) {
             throw new ApiError(404, "Không tìm thấy bộ sưu tập");
         }
+
+        const actualCount = await Product.countDocuments({
+            collections: collection._id,
+            deletedAt: null
+        });
+        collection.productCount = actualCount;
 
         return success(res, collection, `Lấy thông tin bộ sưu tập thành công`, 200);
     } catch (error) {
@@ -273,19 +258,56 @@ export const getAllCollectionController = async (req, res, next) => {
         const limit = sizePage;
         const skip = limit > 0 ? (page - 1) * limit : 0;
 
-        const [collections, count] = await Promise.all([
+        const [collections, count, totalActive, totalInactive, totalFeatured] = await Promise.all([
             Collection.find(query)
-                .sort({ order: 1, createdAt: -1 })
-                .populate("products", "name price original_price thumbnail slug sku stock")
+                .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit)
                 .lean(),
-            Collection.countDocuments(query)
+            Collection.countDocuments(query),
+            query.isActive === false ? 0 : Collection.countDocuments({ ...query, isActive: true }),
+            query.isActive === true ? 0 : Collection.countDocuments({ ...query, isActive: false }),
+            query.isFeatured === false ? 0 : Collection.countDocuments({ ...query, isFeatured: true })
         ]);
 
+        // Đếm số lượng sản phẩm chuẩn thời gian thực qua MongoDB Aggregate
+        const collectionIds = collections.map((c) => c._id);
+        const productCounts = collectionIds.length > 0
+            ? await Product.aggregate([
+                  {
+                      $match: {
+                          collections: { $in: collectionIds },
+                          deletedAt: null
+                      }
+                  },
+                  { $unwind: "$collections" },
+                  {
+                      $match: {
+                          collections: { $in: collectionIds }
+                      }
+                  },
+                  {
+                      $group: {
+                          _id: "$collections",
+                          count: { $sum: 1 }
+                      }
+                  }
+              ])
+            : [];
+
+        const countMap = new Map(productCounts.map((item) => [item._id.toString(), item.count]));
+
+        const collectionsWithCount = collections.map((col) => ({
+            ...col,
+            productCount: countMap.get(col._id.toString()) || 0
+        }));
+
         const result = {
-            collections,
+            collections: collectionsWithCount,
             totalCollection: count,
+            totalActive,
+            totalInactive,
+            totalFeatured,
             totalPage: limit > 0 ? Math.ceil(count / limit) : 1,
             currentPage: page,
             sizePage: limit

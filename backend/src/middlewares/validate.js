@@ -10,10 +10,20 @@ export const validate = (schema) => (req, res, next) => {
         });
         if (parsed.body) req.body = parsed.body;
         if (parsed.query) {
-            Object.assign(req.query, parsed.query);
+            Object.defineProperty(req, "query", {
+                value: parsed.query,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+            });
         }
         if (parsed.params) {
-            Object.assign(req.params, parsed.params);
+            Object.defineProperty(req, "params", {
+                value: parsed.params,
+                writable: true,
+                enumerable: true,
+                configurable: true,
+            });
         }
 
         next();

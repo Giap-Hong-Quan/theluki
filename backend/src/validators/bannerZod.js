@@ -5,17 +5,11 @@ const isValidObjectId = (val) => mongoose.Types.ObjectId.isValid(val);
 
 export const createBannerZod = z.object({
     body: z.object({
-        title: z
-            .string({ required_error: "Tiêu đề banner là bắt buộc" })
+        image: z
+            .string({ required_error: "Hình ảnh banner là bắt buộc" })
             .trim()
-            .min(1, "Tiêu đề banner không được để trống"),
-        subtitle: z.string().trim().optional(),
-        collection_id: z
-            .string({ required_error: "ID bộ sưu tập là bắt buộc" })
-            .refine(isValidObjectId, { message: "ID bộ sưu tập không đúng định dạng ObjectId" }),
-        custom_image: z.string().trim().optional().nullable(),
-        position: z.enum(["home_hero", "home_sub", "popup"]).optional().default("home_hero"),
-        order: z.number().int().min(0).optional().default(0),
+            .min(1, "Hình ảnh banner không được để trống"),
+        position: z.enum(["home_hero", "popup"]).optional().default("home_hero"),
         isActive: z.boolean().optional().default(true)
     })
 });
@@ -25,15 +19,8 @@ export const updateBannerZod = z.object({
         id: z.string().refine(isValidObjectId, { message: "ID banner không đúng định dạng ObjectId" })
     }),
     body: z.object({
-        title: z.string().trim().min(1, "Tiêu đề banner không được để trống").optional(),
-        subtitle: z.string().trim().optional(),
-        collection_id: z
-            .string()
-            .refine(isValidObjectId, { message: "ID bộ sưu tập không đúng định dạng ObjectId" })
-            .optional(),
-        custom_image: z.string().trim().optional().nullable(),
-        position: z.enum(["home_hero", "home_sub", "popup"]).optional(),
-        order: z.number().int().min(0).optional(),
+        image: z.string().trim().min(1, "Hình ảnh banner không được để trống").optional(),
+        position: z.enum(["home_hero", "popup"]).optional(),
         isActive: z.boolean().optional()
     })
 });
@@ -42,11 +29,8 @@ const parseBooleanQuery = z.enum(["true", "false"]).transform((val) => val === "
 
 export const getBannersQueryZod = z.object({
     query: z.object({
-        page: z.coerce.number().int().min(1).default(1),
-        sizePage: z.coerce.number().int().min(0).max(100).default(10),
-        position: z.enum(["home_hero", "home_sub", "popup"]).optional(),
-        isActive: parseBooleanQuery,
-        search: z.string().trim().optional()
+        position: z.enum(["home_hero", "popup"]).optional(),
+        isActive: parseBooleanQuery
     })
 });
 

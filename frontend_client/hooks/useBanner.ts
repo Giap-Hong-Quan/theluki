@@ -6,8 +6,19 @@ import { GetBannersParams, IBanner } from "@/types/bannerType";
 
 export const BANNER_KEYS = {
   all: ["banners"] as const,
+  active: () => [...BANNER_KEYS.all, "active"] as const,
   list: (params?: GetBannersParams) => [...BANNER_KEYS.all, "list", params] as const,
   byId: (id: string) => [...BANNER_KEYS.all, "id", id] as const,
+};
+
+// Hook lấy banner active (1 home_hero, 1 popup) cho Client
+export const useActiveBanners = () => {
+  return useQuery({
+    queryKey: BANNER_KEYS.active(),
+    queryFn: () => bannerService.getActiveBanners(),
+    select: (res) => res?.data,
+    staleTime: 5 * 60 * 1000,
+  });
 };
 
 // Hook lấy danh sách banner

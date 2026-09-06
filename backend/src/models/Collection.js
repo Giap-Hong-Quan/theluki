@@ -32,17 +32,7 @@ const CollectionSchema = new mongoose.Schema(
             type: String,
             default: null
         },
-        products: [ // Danh sách ObjectId sản phẩm nằm trong bộ sưu tập
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Product"
-            }
-        ],
-        productCount: { // Tự động cập nhật số lượng sản phẩm trong bộ sưu tập
-            type: Number,
-            default: 0
-        },
-        order: { // Thứ tự sắp xếp hiển thị (ưu tiên số bé lên trước)
+        productCount: { // Số lượng sản phẩm trong bộ sưu tập (tính toán động qua aggregate)
             type: Number,
             default: 0
         },
@@ -72,18 +62,15 @@ const CollectionSchema = new mongoose.Schema(
     { timestamps: true, versionKey: false }
 );
 
-// Middleware pre-save: Tự động tạo noAccentName, slug và đếm productCount
+// Middleware pre-save: Tự động tạo noAccentName và slug
 CollectionSchema.pre("save", async function () {
     if (this.isModified("name")) {
         this.noAccentName = removeVietnameseTones(this.name);
         this.slug = slugifyModel(this.name);
     }
-    if (this.isModified("products") && Array.isArray(this.products)) {
-        this.productCount = this.products.length;
-    }
 });
 
-// Middleware pre-findOneAndUpdate: Tự động cập nhật noAccentName, slug và productCount
+// Middleware pre-findOneAndUpdate: Tự động cập nhật noAccentName và slug
 CollectionSchema.pre("findOneAndUpdate", async function () {
     const update = this.getUpdate();
     if (!update) return;
@@ -99,15 +86,6 @@ CollectionSchema.pre("findOneAndUpdate", async function () {
         } else {
             update.noAccentName = noAccent;
             update.slug = slugVal;
-        }
-    }
-
-    const productsVal = update.products || update.$set?.products;
-    if (productsVal && Array.isArray(productsVal)) {
-        if (update.$set) {
-            update.$set.productCount = productsVal.length;
-        } else {
-            update.productCount = productsVal.length;
         }
     }
 });

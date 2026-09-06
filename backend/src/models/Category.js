@@ -23,10 +23,6 @@ const CategorySchema = new mongoose.Schema(
             type: String,
             default: null
         },
-        order: { // sắp xếp thứ tự hiển thị trong cùng 1 cấp
-            type: Number,
-            default: 0
-        },
         productCount: { // cập nhật số lượng sản phẩm khi thêm/xóa sản phẩm
             type: Number,
             default: 0

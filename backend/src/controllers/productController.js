@@ -115,11 +115,9 @@ export const getAllProductsController = async (req, res, next) => {
             query.deletedAt = null;
         }
 
-        // Lọc theo trạng thái hoạt động (Mặc định công khai: chỉ lấy sản phẩm active)
-        if (isActive === false) {
-            query.isActive = false;
-        } else {
-            query.isActive = true;
+        // Lọc theo trạng thái hoạt động (Nếu truyền boolean thì lọc theo isActive)
+        if (typeof isActive === "boolean") {
+            query.isActive = isActive;
         }
 
         // Lọc theo Danh mục (Hỗ trợ ObjectId hoặc Slug)
@@ -183,7 +181,7 @@ export const getAllProductsController = async (req, res, next) => {
         const limit = sizePage;
         const skip = limit > 0 ? (page - 1) * limit : 0;
 
-        const [products, count] = await Promise.all([
+        const [products, count, totalActive, totalInactive, totalFeatured] = await Promise.all([
             Product.find(query)
                 .populate("category", "name slug image")
                 .populate("collections", "name slug image")
@@ -192,12 +190,18 @@ export const getAllProductsController = async (req, res, next) => {
                 .skip(skip)
                 .limit(limit)
                 .lean(),
-            Product.countDocuments(query)
+            Product.countDocuments(query),
+            query.isActive === false ? 0 : Product.countDocuments({ ...query, isActive: true }),
+            query.isActive === true ? 0 : Product.countDocuments({ ...query, isActive: false }),
+            query.isFeatured === false ? 0 : Product.countDocuments({ ...query, isFeatured: true })
         ]);
 
         const result = {
             products,
             totalProduct: count,
+            totalActive,
+            totalInactive,
+            totalFeatured,
             totalPage: limit > 0 ? Math.ceil(count / limit) : 1,
             currentPage: page,
             sizePage: limit
