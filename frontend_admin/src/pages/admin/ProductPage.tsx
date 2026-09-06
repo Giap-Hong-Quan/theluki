@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import {Form,Input,InputNumber,Select,Button,ConfigProvider,Switch,Image,Popconfirm,Modal,Tabs,Tag,Tooltip,message,} from "antd";
+import {Form,Input,InputNumber,Select,Button,ConfigProvider,Switch,Image,Popconfirm,Modal,Tabs,Tag,Tooltip,} from "antd";
 import {Download,Plus,Search,RotateCcw,Pencil,Trash2,Shirt,Star,Eye,Image as ImageIcon,Code2,Tag as TagIcon,} from "lucide-react";
 import debounce from "lodash/debounce";
 import CardItem from "../../components/common/CardItem";
@@ -323,7 +323,7 @@ const ProductPage = () => {
       title: "TRẠNG THÁI",
       width: 100,
       align: "center",
-      render: (isActive, record) => (
+      render: (_, record) => (
         <Switch
           checked={record.isActive}
           size="small"

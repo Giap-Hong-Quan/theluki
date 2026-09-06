@@ -63,7 +63,6 @@ const CreateEditbanner = ({
     control,
     watch,
     reset,
-    setValue,
     formState: { errors },
   } = useForm<BannerFormValues>({
     defaultValues: {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Drawer, Switch, Select, Tabs, Tooltip } from "antd";
+import { Drawer, Switch, Select } from "antd";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import {
   Shirt,
@@ -9,7 +9,6 @@ import {
   Plus,
   Trash2,
   Image as ImageIcon,
-  Sparkles,
   Layers,
   Tag as TagIcon,
   Star,
@@ -673,7 +672,6 @@ const CreateEditProduct = ({
   });
 
   const watchedName = watch("name") || "";
-  const watchedThumbnail = watch("thumbnail") || "";
   const watchedMetaTitle = watch("seo.metaTitle") || "";
   const watchedMetaDesc = watch("seo.metaDescription") || "";
 

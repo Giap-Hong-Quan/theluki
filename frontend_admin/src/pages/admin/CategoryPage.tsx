@@ -196,7 +196,7 @@ const CategoryPage = () => {
             <span>DANH MỤC SẢN PHẨM</span>
           </h1>
           <p className="text-xs text-zinc-500 font-mono mt-0.5">
-            {listCategories?.totalCategory ?? 0} danh mục · {listCategories?.activeCategory ?? 0} đang hoạt động
+            {listCategories?.totalCategory ?? 0} danh mục · {listCategories?.totalActive ?? 0} đang hoạt động
           </p>
         </div>
 

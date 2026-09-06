@@ -27,6 +27,8 @@ export interface GetCategoriesQueryParams {
 export interface GetCategoriesData {
   categories: CategoryItem[];
   totalCategory: number;
+  totalActive?: number;
+  totalInactive?: number;
 }
 
 export interface CreateCategoryPayload {
