@@ -23,6 +23,14 @@ const CartItemSchema = new mongoose.Schema(
             trim: true,
             required: true
         },
+        variantId: { // ID biến thể màu sắc
+            type: mongoose.Schema.Types.ObjectId,
+            default: null
+        },
+        sizeId: { // ID biến thể kích cỡ
+            type: mongoose.Schema.Types.ObjectId,
+            default: null
+        },
         sku: { // Mã SKU biến thể cụ thể để check tồn kho tức thì
             type: String,
             trim: true,

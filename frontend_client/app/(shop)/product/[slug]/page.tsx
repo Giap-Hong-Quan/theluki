@@ -3,29 +3,7 @@
 import React, { use, useState, useMemo, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Heart,
-  ShoppingBag,
-  Check,
-  Copy,
-  Ruler,
-  Truck,
-  ShieldCheck,
-  RotateCcw,
-  Share2,
-  ChevronDown,
-  ChevronUp,
-  Minus,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  Info,
-  X,
-  Sparkles,
-  ArrowRight,
-  Eye,
-  Layers,
-} from "lucide-react";
+import {Heart,ShoppingBag,Check,Copy,Ruler,Truck,ShieldCheck,RotateCcw,Share2,ChevronDown,ChevronUp,Minus,Plus,ChevronLeft,ChevronRight,Info,X,Sparkles,ArrowRight,Eye,Layers} from "lucide-react";
 import toast from "react-hot-toast";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import ProductCard from "@/components/product/ProductCard";
@@ -127,7 +105,6 @@ function ProductDetailContent({ slug }: { slug: string }) {
     }
     return product?.stock ?? 0;
   }, [currentSizes, selectedSize, product]);
-
   const isOutOfStock = currentStock <= 0;
 
   // Khi người dùng bấm đổi màu
@@ -178,11 +155,17 @@ function ProductDetailContent({ slug }: { slug: string }) {
       return;
     }
 
+    const selectedSizeObj = (currentVariant?.sizes as any)?.find(
+      (s: any) => s.size === selectedSize
+    );
+    const variantId = (currentVariant as any)?._id;
+    const sizeId = selectedSizeObj?._id;
+
     addToCart(
       {
         productId: product._id,
-        color: currentVariant?.color || "Mặc định",
-        size: selectedSize || "FreeSize",
+        variantId,
+        sizeId,
         quantity,
       },
       {
@@ -388,10 +371,10 @@ function ProductDetailContent({ slug }: { slug: string }) {
           </div>
 
           {/* CỘT PHẢI (THÔNG TIN SẢN PHẨM & MUA HÀNG) - CHIẾM 5 CỘT */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 space-y-4">
             
             {/* 1. Header: Danh mục & Tên sản phẩm */}
-            <div className="space-y-2 border-b border-neutral-200 pb-5">
+            <div className="space-y-1.5 border-b border-neutral-200 pb-3.5">
               <div className="flex items-center justify-between gap-2 text-xs">
                 {typeof product.category === "object" && product.category?.name ? (
                   <Link
@@ -419,7 +402,7 @@ function ProductDetailContent({ slug }: { slug: string }) {
                 </div>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-neutral-950 font-sans leading-tight">
+              <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight text-neutral-900 font-sans leading-snug">
                 {product.name}
               </h1>
 
@@ -453,13 +436,11 @@ function ProductDetailContent({ slug }: { slug: string }) {
               </div>
             </div>
 
-            {/* 2. Khối giá tiền nổi bật */}
-            <div className="p-4 bg-neutral-50 border border-neutral-200 space-y-1">
-              <div className="flex items-baseline gap-3">
-                <span className="text-3xl sm:text-4xl font-black text-neutral-950 font-sans tracking-tight">
-                  {formatPrice(product.price)}
-                </span>
-              </div>
+            {/* 2. Giá tiền */}
+            <div>
+              <span className="text-base sm:text-lg font-bold text-neutral-900 font-sans tracking-tight">
+                {formatPrice(product.price)}
+              </span>
             </div>
 
             {/* 3. Lựa chọn màu sắc (Variants) */}
@@ -542,12 +523,12 @@ function ProductDetailContent({ slug }: { slug: string }) {
                           setSelectedSize(s.size);
                           setQuantity(1);
                         }}
-                        className={`h-11 border text-center relative flex flex-col items-center justify-center transition-all ${
+                        className={`h-9 border text-center relative flex flex-col items-center justify-center transition-all ${
                           isOut
                             ? "border-dashed border-neutral-200 bg-neutral-100/70 text-neutral-400 cursor-not-allowed line-through"
                             : isSelected
-                            ? "border-black bg-black text-white font-black shadow-xs"
-                            : "border-neutral-300 bg-white text-neutral-900 hover:border-black font-bold cursor-pointer"
+                            ? "border-black bg-black text-white font-bold shadow-2xs"
+                            : "border-neutral-300 bg-white text-neutral-900 hover:border-black font-semibold cursor-pointer"
                         }`}
                       >
                         <span className="text-xs font-mono">{s.size}</span>
@@ -586,25 +567,25 @@ function ProductDetailContent({ slug }: { slug: string }) {
             <div className="space-y-3 pt-2 border-t border-neutral-200">
               <div className="flex items-center gap-3">
                 {/* Selector Số lượng */}
-                <div className="flex items-center border border-neutral-300 bg-white h-12">
+                <div className="flex items-center border border-neutral-300 bg-white h-10">
                   <button
                     type="button"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     disabled={quantity <= 1 || isOutOfStock}
-                    className="w-10 h-full flex items-center justify-center text-neutral-600 hover:text-black hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                    className="w-9 h-full flex items-center justify-center text-neutral-600 hover:text-black hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                   >
-                    <Minus className="w-3.5 h-3.5" />
+                    <Minus className="w-3 h-3" />
                   </button>
-                  <span className="w-12 text-center font-bold text-sm font-sans select-none">
+                  <span className="w-10 text-center font-bold text-xs sm:text-sm font-sans select-none">
                     {quantity}
                   </span>
                   <button
                     type="button"
                     onClick={() => setQuantity((q) => Math.min(currentStock, q + 1))}
                     disabled={quantity >= currentStock || isOutOfStock}
-                    className="w-10 h-full flex items-center justify-center text-neutral-600 hover:text-black hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                    className="w-9 h-full flex items-center justify-center text-neutral-600 hover:text-black hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3 h-3" />
                   </button>
                 </div>
 
@@ -613,7 +594,7 @@ function ProductDetailContent({ slug }: { slug: string }) {
                   type="button"
                   onClick={() => toggleWishlist(product._id)}
                   disabled={isWishlistPending}
-                  className={`h-12 w-12 border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                  className={`h-10 w-10 border flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                     isFavorite
                       ? "border-red-500 bg-red-50 text-red-600"
                       : "border-neutral-300 bg-white text-neutral-600 hover:border-black hover:text-black"
@@ -621,7 +602,7 @@ function ProductDetailContent({ slug }: { slug: string }) {
                   title={isFavorite ? "Bỏ khỏi yêu thích" : "Thêm vào yêu thích"}
                 >
                   <Heart
-                    className={`w-5 h-5 ${isFavorite ? "fill-red-600 text-red-600" : ""}`}
+                    className={`w-4 h-4 ${isFavorite ? "fill-red-600 text-red-600" : ""}`}
                   />
                 </button>
               </div>
@@ -632,9 +613,9 @@ function ProductDetailContent({ slug }: { slug: string }) {
                   type="button"
                   onClick={() => handleAddToCart(false)}
                   disabled={isOutOfStock || isCartPending}
-                  className="h-13 bg-black hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md"
+                  className="h-10 sm:h-11 bg-black hover:bg-neutral-800 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all shadow-xs"
                 >
-                  <ShoppingBag className="w-4 h-4" />
+                  <ShoppingBag className="w-3.5 h-3.5" />
                   <span>{isCartPending ? "ĐANG THÊM..." : "THÊM VÀO GIỎ HÀNG"}</span>
                 </button>
 
@@ -642,7 +623,7 @@ function ProductDetailContent({ slug }: { slug: string }) {
                   type="button"
                   onClick={() => handleAddToCart(true)}
                   disabled={isOutOfStock || isCartPending}
-                  className="h-13 border-2 border-black bg-white hover:bg-black hover:text-white disabled:border-neutral-300 disabled:text-neutral-400 disabled:cursor-not-allowed text-black text-xs sm:text-sm font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all"
+                  className="h-10 sm:h-11 border border-black bg-white hover:bg-black hover:text-white disabled:border-neutral-300 disabled:text-neutral-400 disabled:cursor-not-allowed text-black text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all"
                 >
                   <span>MUA NGAY</span>
                   <ArrowRight className="w-4 h-4" />

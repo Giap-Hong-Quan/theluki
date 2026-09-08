@@ -138,7 +138,16 @@ axiosClient.interceptors.response.use(
         processQueue(refreshError, null);
         deleteCookie("accessToken");
 
-        if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+        const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
+        const isPrivateRoute = [
+          "/profile",
+          "/checkout",
+          "/orders",
+          "/wishlist",
+          "/settings",
+        ].some((route) => currentPath.startsWith(route));
+
+        if (isPrivateRoute && currentPath !== "/login") {
           window.location.href = "/login";
         }
         return Promise.reject(refreshError);

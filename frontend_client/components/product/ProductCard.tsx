@@ -2,10 +2,12 @@
 
 import React from "react";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Heart, Loader2 } from "lucide-react";
 import { IProduct } from "@/types/productType";
 import { formatPrice } from "@/utils/formatPrice";
 import { useToggleWishlist, useIsFavorite } from "@/hooks/useWishList";
+import { useAddToCart } from "@/hooks/useCart";
 
 interface ProductCardProps {
   product?: Partial<IProduct> & {
@@ -15,9 +17,11 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product: propProduct }: ProductCardProps) {
+  const router = useRouter();
   const productId = propProduct?._id;
   const isFavorite = useIsFavorite(productId);
   const { mutate: toggleWishlist, isPending } = useToggleWishlist();
+  const { mutate: addToCart, isPending: isAddingCart } = useAddToCart();
 
   // Dữ liệu mẫu (hoặc lấy từ props)
   const product = {
@@ -38,6 +42,40 @@ export default function ProductCard({ product: propProduct }: ProductCardProps) 
     if (productId) {
       toggleWishlist(productId);
     }
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, redirect = false) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!propProduct?._id) {
+      router.push(`/product/${product.slug}`);
+      return;
+    }
+
+    const firstVariant = propProduct?.variants?.[0];
+    const firstSizeObj =
+      firstVariant?.sizes?.find((s) => s.stock > 0) || firstVariant?.sizes?.[0];
+    const firstSize = firstSizeObj?.size || "FreeSize";
+    const color = firstVariant?.color || "Mặc định";
+    const variantId = (firstVariant as any)?._id;
+    const sizeId = (firstSizeObj as any)?._id;
+
+    addToCart(
+      {
+        productId: propProduct._id,
+        variantId,
+        sizeId,
+        quantity: 1,
+      },
+      {
+        onSuccess: () => {
+          if (redirect) {
+            router.push("/cart");
+          }
+        },
+      }
+    );
   };
 
   return (
@@ -98,14 +136,20 @@ export default function ProductCard({ product: propProduct }: ProductCardProps) 
         <div className="flex flex-col gap-2 pt-1 w-full text-[11px] font-bold uppercase tracking-wider font-mono">
           <button
             type="button"
-            className="w-full py-2.5 px-3 bg-black hover:bg-zinc-800 text-white transition-colors cursor-pointer text-center rounded-none"
+            disabled={isAddingCart}
+            onClick={(e) => handleAddToCart(e, true)}
+            className="w-full py-2.5 px-3 bg-black hover:bg-zinc-800 text-white transition-colors cursor-pointer text-center rounded-none flex items-center justify-center gap-1.5 disabled:opacity-60"
           >
+            {isAddingCart && <Loader2 className="w-3 h-3 animate-spin" />}
             Mua ngay
           </button>
           <button
             type="button"
-            className="w-full py-2.5 px-3 bg-white border border-black text-black hover:bg-zinc-100 transition-colors cursor-pointer text-center rounded-none"
+            disabled={isAddingCart}
+            onClick={(e) => handleAddToCart(e, false)}
+            className="w-full py-2.5 px-3 bg-white border border-black text-black hover:bg-zinc-100 transition-colors cursor-pointer text-center rounded-none flex items-center justify-center gap-1.5 disabled:opacity-60"
           >
+            {isAddingCart && <Loader2 className="w-3 h-3 animate-spin" />}
             Thêm vào giỏ
           </button>
         </div>

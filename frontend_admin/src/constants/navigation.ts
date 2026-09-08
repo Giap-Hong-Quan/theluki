@@ -41,7 +41,6 @@ export const SIDEBAR_MENU: MenuGroup[] = [
       { title: "Bộ sưu tập", path: "/collections" },
       { title: "Danh mục", path: "/categories" },
       { title: "Tồn kho & nhập hàng", path: "/inventory", badge: 42 },
-      { title: "Đánh giá & bình luận", path: "/reviews", badge: 34 },
     ],
   },
   {

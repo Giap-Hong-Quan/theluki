@@ -4,7 +4,25 @@ import Product from "../models/Product.js";
 /**
  * Helper kiểm tra tồn kho & thông tin sản phẩm/biến thể (Màu sắc, Kích cỡ, SKU, Ảnh, Giá)
  */
-export const checkProductVariantStock = (product, color, size, requestedQty) => {
+export const checkProductVariantStock = (product, colorOrOptions, sizeParam, requestedQtyParam) => {
+    let variantId = null;
+    let sizeId = null;
+    let color = null;
+    let size = null;
+    let requestedQty = 1;
+
+    if (typeof colorOrOptions === "object" && colorOrOptions !== null) {
+        variantId = colorOrOptions.variantId;
+        sizeId = colorOrOptions.sizeId;
+        color = colorOrOptions.color;
+        size = colorOrOptions.size;
+        requestedQty = sizeParam ?? 1;
+    } else {
+        color = colorOrOptions;
+        size = sizeParam;
+        requestedQty = requestedQtyParam ?? 1;
+    }
+
     if (!product || product.isActive === false || (product.deletedAt && product.deletedAt !== null)) {
         throw new ApiError(404, "Sản phẩm không tồn tại hoặc đã ngừng kinh doanh");
     }
@@ -12,22 +30,57 @@ export const checkProductVariantStock = (product, color, size, requestedQty) => 
     let availableStock = product.stock;
     let variantSku = product.sku;
     let variantImage = product.thumbnail;
+    let foundColor = color || "";
+    let foundSize = size || "";
+    let foundVariantId = variantId || null;
+    let foundSizeId = sizeId || null;
 
     if (product.variants && product.variants.length > 0) {
-        const colorVar = product.variants.find(
-            (v) => v.color && v.color.trim().toLowerCase() === color.trim().toLowerCase()
-        );
+        // Tìm biến thể theo variantId hoặc tên color
+        let colorVar = null;
+        if (variantId) {
+            colorVar = product.variants.find(
+                (v) => v._id && v._id.toString() === variantId.toString()
+            );
+        }
+        if (!colorVar && color) {
+            colorVar = product.variants.find(
+                (v) => v.color && v.color.trim().toLowerCase() === color.trim().toLowerCase()
+            );
+        }
         if (!colorVar) {
-            throw new ApiError(400, `Phân loại màu '${color}' không tồn tại cho sản phẩm này`);
+            colorVar = product.variants[0];
         }
 
-        const sizeOpt = colorVar.sizes?.find(
-            (s) => s.size && s.size.trim().toLowerCase() === size.trim().toLowerCase()
-        );
+        if (!colorVar) {
+            throw new ApiError(400, `Biến thể sản phẩm không tồn tại`);
+        }
+
+        foundColor = colorVar.color;
+        foundVariantId = colorVar._id;
+
+        // Tìm size theo sizeId hoặc tên size
+        let sizeOpt = null;
+        if (sizeId && colorVar.sizes) {
+            sizeOpt = colorVar.sizes.find(
+                (s) => s._id && s._id.toString() === sizeId.toString()
+            );
+        }
+        if (!sizeOpt && size && colorVar.sizes) {
+            sizeOpt = colorVar.sizes.find(
+                (s) => s.size && s.size.trim().toLowerCase() === size.trim().toLowerCase()
+            );
+        }
+        if (!sizeOpt && colorVar.sizes && colorVar.sizes.length > 0) {
+            sizeOpt = colorVar.sizes[0];
+        }
+
         if (!sizeOpt) {
-            throw new ApiError(400, `Kích cỡ '${size}' không tồn tại cho màu '${color}'`);
+            throw new ApiError(400, `Kích cỡ sản phẩm không tồn tại cho màu '${foundColor}'`);
         }
 
+        foundSize = sizeOpt.size;
+        foundSizeId = sizeOpt._id;
         availableStock = sizeOpt.stock;
         variantSku = colorVar.sku || `${product.sku}-${sizeOpt.size.toUpperCase()}`;
         variantImage = colorVar.image || product.thumbnail;
@@ -45,6 +98,10 @@ export const checkProductVariantStock = (product, color, size, requestedQty) => 
         price: product.price,
         sku: variantSku,
         thumbnail: variantImage,
+        color: foundColor,
+        size: foundSize,
+        variantId: foundVariantId,
+        sizeId: foundSizeId,
         availableStock
     };
 };

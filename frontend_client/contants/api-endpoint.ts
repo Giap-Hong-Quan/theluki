@@ -41,9 +41,10 @@ export const API_ENDPOINTS = {
   },
   CART: {
     GET: "/cart",
-    ADD_ITEM: "/cart/items",
-    UPDATE_ITEM: (itemId: string) => `/cart/items/${itemId}`,
-    REMOVE_ITEM: (itemId: string) => `/cart/items/${itemId}`,
+    ADD: "/cart/add",
+    UPDATE_QUANTITY: "/cart/update-quantity",
+    TOGGLE_SELECT: "/cart/toggle-select",
+    REMOVE: "/cart/remove",
     CLEAR: "/cart/clear",
   },
   ORDERS: {

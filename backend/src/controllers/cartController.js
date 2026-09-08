@@ -11,7 +11,7 @@ import { checkProductVariantStock } from "../services/productService.js";
 export const getCartController = async (req, res, next) => {
     try {
         const userId = req.user._id;
-        let cart = await Cart.findOne({ user: userId });
+        let cart = await Cart.findOne({ user: userId }).populate("items.product", "slug name images category variants brand");
 
         if (!cart) {
             cart = await Cart.create({ user: userId, items: [] });
@@ -29,32 +29,50 @@ export const getCartController = async (req, res, next) => {
 export const addToCartController = async (req, res, next) => {
     try {
         const userId = req.user._id;
-        const { productId, color, size, quantity } = req.body;
+        const { productId, variantId, sizeId, color, size, quantity } = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             throw new ApiError(400, "ID sản phẩm không đúng định dạng");
         }
 
         const product = await Product.findById(productId);
-        let cart = await Cart.findOne({ user: userId });
+        if (!product) {
+            throw new ApiError(404, "Sản phẩm không tồn tại");
+        }
 
+        let cart = await Cart.findOne({ user: userId });
         if (!cart) {
             cart = new Cart({ user: userId, items: [] });
         }
 
-        // Tìm sản phẩm trùng khớp trong giỏ hàng (cùng product ID, color, size)
-        const existingItemIndex = cart.items.findIndex(
-            (item) =>
-                item.product.toString() === productId &&
-                item.color.toLowerCase() === color.trim().toLowerCase() &&
-                item.size.toLowerCase() === size.trim().toLowerCase()
-        );
+        const getProdId = (p) => (p?._id ? p._id.toString() : p?.toString() || "");
+
+        // Tìm sản phẩm trùng khớp trong giỏ hàng (cùng product ID, theo variantId/sizeId HOẶC color/size)
+        const existingItemIndex = cart.items.findIndex((item) => {
+            const matchProduct = getProdId(item.product) === productId;
+            if (!matchProduct) return false;
+
+            if (variantId && item.variantId) {
+                const matchVar = item.variantId.toString() === variantId.toString();
+                if (sizeId && item.sizeId) {
+                    return matchVar && item.sizeId.toString() === sizeId.toString();
+                }
+                if (size && item.size) {
+                    return matchVar && item.size.toLowerCase() === size.trim().toLowerCase();
+                }
+                return matchVar;
+            }
+
+            const matchColor = item.color && color && item.color.toLowerCase() === color.trim().toLowerCase();
+            const matchSize = item.size && size && item.size.toLowerCase() === size.trim().toLowerCase();
+            return matchColor && matchSize;
+        });
 
         const currentQty = existingItemIndex > -1 ? cart.items[existingItemIndex].quantity : 0;
         const totalTargetQty = currentQty + quantity;
 
         // Kiểm tra tồn kho sản phẩm/biến thể bằng helper từ productService
-        const variantInfo = checkProductVariantStock(product, color, size, totalTargetQty);
+        const variantInfo = checkProductVariantStock(product, { variantId, sizeId, color, size }, totalTargetQty);
 
         if (existingItemIndex > -1) {
             // Đã có trong giỏ -> Cộng dồn số lượng & cập nhật thông tin giá/ảnh mới nhất
@@ -63,13 +81,19 @@ export const addToCartController = async (req, res, next) => {
             cart.items[existingItemIndex].name = variantInfo.name;
             cart.items[existingItemIndex].sku = variantInfo.sku;
             cart.items[existingItemIndex].thumbnail = variantInfo.thumbnail;
+            cart.items[existingItemIndex].color = variantInfo.color;
+            cart.items[existingItemIndex].size = variantInfo.size;
+            cart.items[existingItemIndex].variantId = variantInfo.variantId;
+            cart.items[existingItemIndex].sizeId = variantInfo.sizeId;
         } else {
             // Chưa có -> Thêm món mới vào giỏ hàng
             cart.items.push({
                 product: productId,
                 name: variantInfo.name,
-                color: color.trim(),
-                size: size.trim(),
+                color: variantInfo.color,
+                size: variantInfo.size,
+                variantId: variantInfo.variantId,
+                sizeId: variantInfo.sizeId,
                 sku: variantInfo.sku,
                 quantity,
                 price: variantInfo.price,
@@ -79,6 +103,7 @@ export const addToCartController = async (req, res, next) => {
         }
 
         await cart.save();
+        await cart.populate("items.product", "slug name images category variants brand");
         success(res, cart, "Thêm sản phẩm vào giỏ hàng thành công", 200);
     } catch (error) {
         next(error);
@@ -99,12 +124,13 @@ export const updateCartItemQuantityController = async (req, res, next) => {
         }
 
         let itemIndex = -1;
+        const getProdId = (p) => (p?._id ? p._id.toString() : p?.toString() || "");
         if (itemId) {
             itemIndex = cart.items.findIndex((item) => item._id.toString() === itemId);
         } else if (productId && color && size) {
             itemIndex = cart.items.findIndex(
                 (item) =>
-                    item.product.toString() === productId &&
+                    getProdId(item.product) === productId &&
                     item.color.toLowerCase() === color.trim().toLowerCase() &&
                     item.size.toLowerCase() === size.trim().toLowerCase()
             );
@@ -131,6 +157,7 @@ export const updateCartItemQuantityController = async (req, res, next) => {
         targetItem.thumbnail = variantInfo.thumbnail;
 
         await cart.save();
+        await cart.populate("items.product", "slug name images category variants brand");
         success(res, cart, "Cập nhật số lượng sản phẩm thành công", 200);
     } catch (error) {
         next(error);
@@ -156,12 +183,13 @@ export const toggleSelectItemController = async (req, res, next) => {
             });
         } else {
             let itemIndex = -1;
+            const getProdId = (p) => (p?._id ? p._id.toString() : p?.toString() || "");
             if (itemId) {
                 itemIndex = cart.items.findIndex((item) => item._id.toString() === itemId);
             } else if (productId && color && size) {
                 itemIndex = cart.items.findIndex(
                     (item) =>
-                        item.product.toString() === productId &&
+                        getProdId(item.product) === productId &&
                         item.color.toLowerCase() === color.trim().toLowerCase() &&
                         item.size.toLowerCase() === size.trim().toLowerCase()
                 );
@@ -177,6 +205,7 @@ export const toggleSelectItemController = async (req, res, next) => {
         }
 
         await cart.save();
+        await cart.populate("items.product", "slug name images category variants brand");
         success(res, cart, "Cập nhật trạng thái chọn mua thành công", 200);
     } catch (error) {
         next(error);
@@ -197,6 +226,7 @@ export const removeCartItemController = async (req, res, next) => {
         }
 
         const initialLength = cart.items.length;
+        const getProdId = (p) => (p?._id ? p._id.toString() : p?.toString() || "");
 
         if (itemId) {
             cart.items = cart.items.filter((item) => item._id.toString() !== itemId);
@@ -204,7 +234,7 @@ export const removeCartItemController = async (req, res, next) => {
             cart.items = cart.items.filter(
                 (item) =>
                     !(
-                        item.product.toString() === productId &&
+                        getProdId(item.product) === productId &&
                         item.color.toLowerCase() === color.trim().toLowerCase() &&
                         item.size.toLowerCase() === size.trim().toLowerCase()
                     )
@@ -216,6 +246,7 @@ export const removeCartItemController = async (req, res, next) => {
         }
 
         await cart.save();
+        await cart.populate("items.product", "slug name images category variants brand");
         success(res, cart, "Xóa sản phẩm khỏi giỏ hàng thành công", 200);
     } catch (error) {
         next(error);

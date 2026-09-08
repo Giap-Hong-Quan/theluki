@@ -18,7 +18,6 @@ const ProductDetailPage = lazy(() => import("../pages/admin/ProductDetailPage"))
 const CollectionPage = lazy(() => import("../pages/admin/CollectionPage"));
 const CategoryPage = lazy(() => import("../pages/admin/CategoryPage"));
 const InventoryPage = lazy(() => import("../pages/admin/InventoryPage"));
-const ReviewPage = lazy(() => import("../pages/admin/ReviewPage"));
 const CouponPage = lazy(() => import("../pages/admin/CouponPage"));
 const BlogPage = lazy(() => import("../pages/admin/BlogPage"));
 const BannerPage = lazy(() => import("../pages/admin/BannerPage"));
@@ -47,7 +46,6 @@ const router = createBrowserRouter([
           { path: "collections", element: <CollectionPage /> },
           { path: "categories", element: <CategoryPage /> },
           { path: "inventory", element: <InventoryPage /> },
-          { path: "reviews", element: <ReviewPage /> },
           { path: "coupons", element: <CouponPage /> },
           { path: "blogs", element: <BlogPage /> },
           { path: "banners", element: <BannerPage /> },

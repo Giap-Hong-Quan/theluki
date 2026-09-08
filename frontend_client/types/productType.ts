@@ -53,6 +53,7 @@ export interface GetProductsParams {
   isFeatured?: boolean;
   isActive?: boolean;
   isDeleted?: boolean;
+  sort?: string;
 }
 
 export interface GetProductsResponse {
