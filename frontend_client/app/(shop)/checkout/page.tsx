@@ -29,6 +29,7 @@ import { useProfile, useAddAddress, useSetDefaultAddress } from "@/hooks/useAuth
 import { useCart } from "@/hooks/useCart";
 import { useCheckout, useCalculateShippingFee } from "@/hooks/useOrder";
 import { UserAddress } from "@/types/authType";
+import CheckoutSkeleton from "@/components/checkout/CheckoutSkeleton";
 import {
   viettelPostLocationService,
   ViettelProvince,
@@ -262,7 +263,7 @@ export default function CheckoutPage() {
     name: "ViettelPost Chuyển Phát Nhanh",
     time: "1 - 3 ngày (Nội tỉnh 24h)",
     desc: "Giao hàng qua đường hàng không / trục ưu tiên, tối ưu cho thời trang",
-    price: 28000,
+    price: 0,
   });
 
   // State mã giảm giá
@@ -415,8 +416,17 @@ export default function CheckoutPage() {
     );
   }, [selectedCartItems]);
 
-  const shippingFee = shippingService.price;
-  const discountAmount = appliedCoupon ? appliedCoupon.discount : 0;
+  const hasAddress = Boolean(
+    activeAddress?.province && activeAddress?.district && activeAddress?.ward
+  );
+  const shippingFee = hasAddress ? (shippingService.price || 28000) : 0;
+  const discountAmount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.code === "FREESHIP") {
+      return shippingFee;
+    }
+    return appliedCoupon.discount;
+  }, [appliedCoupon, shippingFee]);
   const finalTotal = Math.max(0, subtotal + shippingFee - discountAmount);
 
   // Áp dụng coupon
@@ -429,6 +439,10 @@ export default function CheckoutPage() {
       setCouponInput("");
       toast.success("Áp dụng mã giảm 100.000đ thành công!");
     } else if (codeUpper === "FREESHIP") {
+      if (!hasAddress) {
+        toast.error("Vui lòng thêm địa chỉ nhận hàng trước khi áp dụng mã Freeship!");
+        return;
+      }
       setAppliedCoupon({ code: "FREESHIP", discount: shippingFee });
       setCouponError("");
       setCouponInput("");
@@ -527,14 +541,7 @@ export default function CheckoutPage() {
       </header>
 
       {/* Loading state giỏ hàng / profile */}
-      {(!mounted || isCartLoading) && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 flex flex-col items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-zinc-400 mb-3" />
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            Đang tải thông tin đơn hàng...
-          </p>
-        </div>
-      )}
+      {(!mounted || isCartLoading) && <CheckoutSkeleton />}
 
       {/* Giỏ hàng không có sản phẩm được chọn */}
       {mounted && !isCartLoading && selectedCartItems.length === 0 && (
@@ -685,41 +692,70 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
-                  <div className="p-4 border border-black bg-zinc-50/80 ring-1 ring-black flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center shrink-0 mt-0.5">
-                        <Truck className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-zinc-900 uppercase">
-                            {shippingService.name}
-                          </span>
-                          <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-black text-white">
-                            Tiêu chuẩn
-                          </span>
+                  {hasAddress ? (
+                    <div className="p-4 border border-black bg-zinc-50/80 ring-1 ring-black flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded bg-black text-white flex items-center justify-center shrink-0 mt-0.5">
+                          <Truck className="w-4 h-4" />
                         </div>
-                        <p className="text-[11px] text-zinc-600 mt-1">
-                          Thời gian dự kiến:{" "}
-                          <span className="text-zinc-900 font-semibold">
-                            {shippingService.time}
-                          </span>
-                        </p>
-                        <p className="text-[11px] text-zinc-500 mt-0.5">
-                          {shippingService.desc}
-                        </p>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-900 uppercase">
+                              {shippingService.name}
+                            </span>
+                            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase bg-black text-white">
+                              Tiêu chuẩn
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-zinc-600 mt-1">
+                            Thời gian dự kiến:{" "}
+                            <span className="text-zinc-900 font-semibold">
+                              {shippingService.time}
+                            </span>
+                          </p>
+                          <p className="text-[11px] text-zinc-500 mt-0.5">
+                            {shippingService.desc}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="font-mono text-xs font-bold text-zinc-900 block">
+                          {formatPrice(shippingFee)}
+                        </span>
+                        <span className="text-[10px] text-emerald-600 font-medium block mt-0.5">
+                          Đang áp dụng
+                        </span>
                       </div>
                     </div>
+                  ) : (
+                    <div className="p-4 border border-dashed border-zinc-300 bg-zinc-50/50 flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded bg-zinc-200 text-zinc-500 flex items-center justify-center shrink-0 mt-0.5">
+                          <Truck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-zinc-700 uppercase">
+                              {shippingService.name}
+                            </span>
+                            <span className="px-1.5 py-0.5 text-[9px] font-medium bg-zinc-200 text-zinc-600">
+                              Tiêu chuẩn
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-zinc-500 mt-1">
+                            Vui lòng thêm địa chỉ nhận hàng ở bước 1 để tính chính xác cước phí giao hàng
+                          </p>
+                        </div>
+                      </div>
 
-                    <div className="text-right shrink-0">
-                      <span className="font-mono text-xs font-bold text-zinc-900 block">
-                        {formatPrice(shippingService.price)}
-                      </span>
-                      <span className="text-[10px] text-emerald-600 font-medium block mt-0.5">
-                        Đang áp dụng
-                      </span>
+                      <div className="text-right shrink-0">
+                        <span className="font-mono text-xs font-semibold text-zinc-400 italic block">
+                          Chờ địa chỉ
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </section>
 
                 {/* 3. KHỐI PHƯƠNG THỨC THANH TOÁN */}
@@ -908,10 +944,16 @@ export default function CheckoutPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Cước vận chuyển ({shippingService.name}):</span>
-                    <span className="font-mono font-semibold text-zinc-900">
-                      {formatPrice(shippingFee)}
-                    </span>
+                    <span>Cước vận chuyển:</span>
+                    {hasAddress ? (
+                      <span className="font-mono font-semibold text-zinc-900">
+                        {formatPrice(shippingFee)}
+                      </span>
+                    ) : (
+                      <span className="font-mono text-[11px] text-zinc-400 italic">
+                        Chờ địa chỉ nhận hàng
+                      </span>
+                    )}
                   </div>
                   {discountAmount > 0 && (
                     <div className="flex justify-between text-emerald-600 font-medium">
@@ -934,7 +976,9 @@ export default function CheckoutPage() {
                         {formatPrice(finalTotal)}
                       </span>
                       <span className="block text-[10px] text-zinc-400">
-                        (Đã bao gồm VAT & Phí ViettelPost)
+                        {hasAddress
+                          ? "(Đã bao gồm VAT & Phí ViettelPost)"
+                          : "(Chưa bao gồm cước vận chuyển)"}
                       </span>
                     </div>
                   </div>

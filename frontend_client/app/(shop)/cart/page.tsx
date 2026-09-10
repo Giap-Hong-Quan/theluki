@@ -12,7 +12,6 @@ import {
   Check,
   ShoppingBag,
   ChevronDown,
-  Loader2,
 } from "lucide-react";
 import {
   useCart,
@@ -23,6 +22,7 @@ import {
 import { useProfile } from "@/hooks/useAuth";
 import { formatPrice } from "@/utils/formatPrice";
 import { ICartItem } from "@/types/cartType";
+import CartSkeleton from "@/components/cart/CartSkeleton";
 
 export default function CartPage() {
   const router = useRouter();
@@ -75,16 +75,9 @@ export default function CartPage() {
     removeItemMutation.mutate({ itemId });
   };
 
-  // Loading state
+  // Loading state với Skeleton mượt mà
   if (isAuthLoading || isCartLoading) {
-    return (
-      <div className="py-20 flex flex-col items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-zinc-400 mb-4" />
-        <p className="text-xs uppercase tracking-widest text-zinc-500 font-light">
-          Đang tải thông tin giỏ hàng...
-        </p>
-      </div>
-    );
+    return <CartSkeleton />;
   }
 
   // Guest state (not logged in)

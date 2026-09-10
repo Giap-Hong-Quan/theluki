@@ -3,7 +3,26 @@
 import React, { use, useState, useMemo, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {Heart,ShoppingBag,Check,Copy,Ruler,Truck,ShieldCheck,RotateCcw,Share2,ChevronDown,ChevronUp,Minus,Plus,ChevronLeft,ChevronRight,Info,X,Sparkles,ArrowRight,Eye,Layers} from "lucide-react";
+import {
+  Heart,
+  ShoppingBag,
+  Check,
+  Copy,
+  Ruler,
+  Share2,
+  ChevronDown,
+  ChevronUp,
+  Minus,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  X,
+  Sparkles,
+  ArrowRight,
+  Eye,
+  Layers,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import Breadcrumb from "@/components/common/Breadcrumb";
 import ProductCard from "@/components/product/ProductCard";
@@ -373,33 +392,18 @@ function ProductDetailContent({ slug }: { slug: string }) {
           {/* CỘT PHẢI (THÔNG TIN SẢN PHẨM & MUA HÀNG) - CHIẾM 5 CỘT */}
           <div className="lg:col-span-5 space-y-4">
             
-            {/* 1. Header: Danh mục & Tên sản phẩm */}
+            {/* 1. Header: Tên sản phẩm & Nút Chia sẻ */}
             <div className="space-y-1.5 border-b border-neutral-200 pb-3.5">
-              <div className="flex items-center justify-between gap-2 text-xs">
-                {typeof product.category === "object" && product.category?.name ? (
-                  <Link
-                    href={`/product?category=${product.category.slug}`}
-                    className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-500 font-bold hover:text-black transition-colors"
-                  >
-                    {product.category.name}
-                  </Link>
-                ) : (
-                  <span className="font-mono text-xs uppercase tracking-[0.2em] text-neutral-400">
-                    THE LUKI COLLECTION
-                  </span>
-                )}
-
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleShare}
-                    className="text-neutral-400 hover:text-black transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-mono"
-                    title="Chia sẻ sản phẩm"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    CHIA SẺ
-                  </button>
-                </div>
+              <div className="flex items-center justify-end gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="text-neutral-400 hover:text-black transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-mono"
+                  title="Chia sẻ sản phẩm"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  CHIA SẺ
+                </button>
               </div>
 
               <h1 className="text-lg sm:text-xl font-bold uppercase tracking-tight text-neutral-900 font-sans leading-snug">
@@ -452,9 +456,6 @@ function ProductDetailContent({ slug }: { slug: string }) {
                     <span className="font-normal text-neutral-600 normal-case">
                       {currentVariant?.color}
                     </span>
-                  </span>
-                  <span className="text-[11px] font-mono text-neutral-400">
-                    {product.variants.length} màu khả dụng
                   </span>
                 </div>
 
@@ -547,18 +548,11 @@ function ProductDetailContent({ slug }: { slug: string }) {
                 </div>
 
                 {/* Tình trạng tồn kho theo size */}
-                <div className="text-xs font-mono pt-1">
-                  {isOutOfStock ? (
-                    <span className="text-red-600 font-bold flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-red-600 animate-ping inline-block" />
-                      Tạm hết hàng kích thước này
-                    </span>
-                  ) : (
-                    <span className="text-emerald-700 font-bold flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
-                      Còn hàng ({currentStock} sản phẩm có sẵn tại kho)
-                    </span>
-                  )}
+                <div className="text-xs font-mono pt-1 text-neutral-600">
+                  <span>Tồn kho: </span>
+                  <strong className={isOutOfStock ? "text-red-600" : "text-neutral-900 font-bold"}>
+                    {currentStock}
+                  </strong>
                 </div>
               </div>
             )}
@@ -631,37 +625,7 @@ function ProductDetailContent({ slug }: { slug: string }) {
               </div>
             </div>
 
-            {/* 6. Khối cam kết dịch vụ (Trust Badges) */}
-            <div className="grid grid-cols-2 gap-3 p-4 border border-neutral-200 bg-neutral-50/50 text-xs text-neutral-700">
-              <div className="flex items-start gap-2.5">
-                <Truck className="w-4 h-4 text-neutral-900 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-neutral-900 font-bold">Giao hàng toàn quốc</strong>
-                  <span className="text-[11px] text-neutral-500">Đồng kiểm khi nhận hàng</span>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <RotateCcw className="w-4 h-4 text-neutral-900 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-neutral-900 font-bold">Đổi trả trong 7 ngày</strong>
-                  <span className="text-[11px] text-neutral-500">Nếu lỗi hoặc không vừa size</span>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <ShieldCheck className="w-4 h-4 text-neutral-900 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-neutral-900 font-bold">100% Chính hãng</strong>
-                  <span className="text-[11px] text-neutral-500">Thiết kế chuẩn THE LUKI</span>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <Sparkles className="w-4 h-4 text-neutral-900 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-neutral-900 font-bold">Chất lượng cao cấp</strong>
-                  <span className="text-[11px] text-neutral-500">Vải may tiêu chuẩn xuất khẩu</span>
-                </div>
-              </div>
-            </div>
+
 
             {/* 7. Accordion Thông tin & Mô tả & Thông số */}
             <div className="border-t border-neutral-200 divide-y divide-neutral-200 pt-2">
