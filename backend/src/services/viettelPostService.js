@@ -48,8 +48,7 @@ const getPriceByService = async ({
     try {
         const baseUrl = process.env.VIETTELPOST_BASE_URL || "https://partnerdev.viettelpost.vn";
         const token = process.env.VIETTELPOST_TOKEN;
-        const senderAddress =
-            process.env.SENDER_ADDRESS || "Xã Cát Minh, Huyện Phù Cát, Tỉnh Bình Định";
+        const senderAddress = process.env.SENDER_ADDRESS;
         const receiverAddressStr = formatAddress(receiverAddress);
 
         if (!receiverAddressStr) {
@@ -119,4 +118,4 @@ export const calculateFee = async (params) => {
     );
 
     return results;
-};
+};
