@@ -8,6 +8,7 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off", // <-- Tắt cấm dùng any
+      "react-hooks/set-state-in-effect": "off", // <-- Tắt cấm set state trong effect
     },
   },
   // Override default ignores of eslint-config-next.

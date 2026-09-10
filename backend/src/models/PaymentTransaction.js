@@ -16,7 +16,7 @@ const PaymentTransactionSchema = new mongoose.Schema(
             required: true,
             index: true
         },
-        user: { // Khách hàng thực hiện thanh toán (denormalize để query lịch sử giao dịch theo user nhanh, không cần join qua Order)
+        user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,

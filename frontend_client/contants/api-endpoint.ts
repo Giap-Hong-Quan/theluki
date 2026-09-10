@@ -13,6 +13,8 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: "/auth/change-password",
     GOOGLE: "/auth/google",
     FACEBOOK: "/auth/facebook",
+    ADD_ADDRESS: "/auth/address",
+    SET_DEFAULT_ADDRESS: (addressId: string) => `/auth/address/${addressId}/default`,
   },
   PRODUCTS: {
     GET_ALL: "/product",
@@ -49,6 +51,8 @@ export const API_ENDPOINTS = {
   },
   ORDERS: {
     CREATE: "/order",
+    CHECKOUT: "/order/checkout",
+    CALCULATE_FEE: "/order/calculate-fee",
     GET_MY_ORDERS: "/order/my-orders",
     GET_DETAIL: (id: string) => `/order/${id}`,
     CANCEL: (id: string) => `/order/${id}/cancel`,

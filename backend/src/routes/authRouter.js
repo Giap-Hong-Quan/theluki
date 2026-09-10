@@ -11,7 +11,9 @@ import {
     resetPasswordController,
     changePasswordController,
     loginWithGoogle,
-    loginWithFaceBook
+    loginWithFaceBook,
+    addAddressController,
+    setDefaultAddressController
 } from "../controllers/authController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { validate } from "../middlewares/validate.js";
@@ -412,4 +414,9 @@ authRouter.put("/change-password", verifyToken, validate(changePasswordSchema), 
 
 authRouter.post("/google", validate(googleLoginSchema), loginWithGoogle);
 authRouter.post("/facebook", validate(), loginWithFaceBook);
+
+// Address Management
+authRouter.post("/address", verifyToken, addAddressController);
+authRouter.put("/address/:addressId/default", verifyToken, setDefaultAddressController);
+
 export default authRouter;

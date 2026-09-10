@@ -3,7 +3,7 @@ import { authService } from "@/services/authService";
 import { LoginFormData } from "@/validators/auth.validator";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { SignupPayload, UserProfile } from "@/types/authType";
+import { SignupPayload, UserProfile, UserAddress } from "@/types/authType";
 import { getCookie } from "@/services/axios-client";
 
 // Lấy thông tin Profile người dùng hiện tại
@@ -170,6 +170,36 @@ export const useResetPassword = () => {
         },
         onError: (error: any) => {
             toast.error(error?.message || "Đặt lại mật khẩu thất bại, vui lòng kiểm tra lại OTP!");
+        },
+    });
+};
+
+// Thêm địa chỉ mới vào sổ địa chỉ (tự động invalidate cache ["userProfile"])
+export const useAddAddress = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: Partial<UserAddress>) => authService.addAddress(data),
+        onSuccess: (res: any) => {
+            queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+            toast.success(res?.message || "Thêm địa chỉ thành công!");
+        },
+        onError: (error: any) => {
+            toast.error(error?.message || "Thêm địa chỉ thất bại!");
+        },
+    });
+};
+
+// Đặt 1 địa chỉ làm mặc định (tự động invalidate cache ["userProfile"])
+export const useSetDefaultAddress = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (addressId: string) => authService.setDefaultAddress(addressId),
+        onSuccess: (res: any) => {
+            queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+            toast.success(res?.message || "Đã đặt làm địa chỉ mặc định!");
+        },
+        onError: (error: any) => {
+            toast.error(error?.message || "Đặt địa chỉ mặc định thất bại!");
         },
     });
 };

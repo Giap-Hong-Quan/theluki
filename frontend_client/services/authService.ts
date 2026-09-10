@@ -6,6 +6,7 @@ import {
   LoginResponse,
   RegisterResponse,
   ProfileResponse,
+  UserAddress,
 } from "@/types/authType";
 
 export const authService = {
@@ -66,6 +67,16 @@ export const authService = {
     newPassword: string;
   }): Promise<{ message?: string; success?: boolean }> => {
     return axiosClient.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, payload);
+  },
+
+  // Thêm địa chỉ mới vào sổ địa chỉ
+  addAddress: (payload: Partial<UserAddress>): Promise<{ success: boolean; message: string; data: { address: UserAddress; addresses: UserAddress[] } }> => {
+    return axiosClient.post(API_ENDPOINTS.AUTH.ADD_ADDRESS, payload);
+  },
+
+  // Đặt địa chỉ mặc định
+  setDefaultAddress: (addressId: string): Promise<{ success: boolean; message: string; data: UserAddress[] }> => {
+    return axiosClient.put(API_ENDPOINTS.AUTH.SET_DEFAULT_ADDRESS(addressId));
   },
 };
 

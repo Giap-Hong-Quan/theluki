@@ -345,3 +345,83 @@ export const loginWithFaceBook = async (req, res, next) => {
         next(error);
     }
 };
+
+// 12. Thêm địa chỉ mới cho người dùng đang đăng nhập
+export const addAddressController = async (req, res, next) => {
+    try {
+        const userId = req.user.id || req.user._id;
+        const { receiverName, receiverPhone, province, district, ward, detailAddress, detail, label, isDefault, provinceId, districtId, wardId } = req.body;
+        
+        if (!receiverName || !receiverPhone || !province || !district || !ward || (!detailAddress && !detail)) {
+            throw new ApiError(400, "Vui lòng nhập đầy đủ thông tin địa chỉ bắt buộc");
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new ApiError(404, "Người dùng không tồn tại");
+        }
+
+        const shouldBeDefault = isDefault || !user.addresses || user.addresses.length === 0;
+
+        if (shouldBeDefault && user.addresses) {
+            user.addresses.forEach((addr) => {
+                addr.isDefault = false;
+            });
+        }
+
+        const newAddr = {
+            receiverName,
+            receiverPhone,
+            province,
+            district,
+            ward,
+            detail: detailAddress || detail,
+            detailAddress: detailAddress || detail,
+            provinceId: provinceId ? Number(provinceId) : undefined,
+            districtId: districtId ? Number(districtId) : undefined,
+            wardId: wardId ? Number(wardId) : undefined,
+            label: label || "Nhà riêng",
+            isDefault: shouldBeDefault
+        };
+
+        user.addresses.push(newAddr);
+        await user.save();
+
+        const createdAddress = user.addresses[user.addresses.length - 1];
+        return success(res, { address: createdAddress, addresses: user.addresses }, "Thêm địa chỉ thành công", 201);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// 13. Đặt 1 địa chỉ có sẵn làm mặc định
+export const setDefaultAddressController = async (req, res, next) => {
+    try {
+        const userId = req.user.id || req.user._id;
+        const { addressId } = req.params;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new ApiError(404, "Người dùng không tồn tại");
+        }
+
+        let found = false;
+        user.addresses.forEach((addr) => {
+            if (addr._id && addr._id.toString() === addressId) {
+                addr.isDefault = true;
+                found = true;
+            } else {
+                addr.isDefault = false;
+            }
+        });
+
+        if (!found) {
+            throw new ApiError(404, "Không tìm thấy địa chỉ trong sổ địa chỉ");
+        }
+
+        await user.save();
+        return success(res, user.addresses, "Đặt địa chỉ mặc định thành công", 200);
+    } catch (error) {
+        next(error);
+    }
+};

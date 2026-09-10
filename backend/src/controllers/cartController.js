@@ -30,21 +30,17 @@ export const addToCartController = async (req, res, next) => {
     try {
         const userId = req.user._id;
         const { productId, variantId, sizeId, color, size, quantity } = req.body;
-
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             throw new ApiError(400, "ID sản phẩm không đúng định dạng");
         }
-
         const product = await Product.findById(productId);
         if (!product) {
             throw new ApiError(404, "Sản phẩm không tồn tại");
         }
-
         let cart = await Cart.findOne({ user: userId });
         if (!cart) {
             cart = new Cart({ user: userId, items: [] });
         }
-
         const getProdId = (p) => (p?._id ? p._id.toString() : p?.toString() || "");
 
         // Tìm sản phẩm trùng khớp trong giỏ hàng (cùng product ID, theo variantId/sizeId HOẶC color/size)

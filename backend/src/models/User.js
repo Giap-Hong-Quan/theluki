@@ -65,7 +65,7 @@ const User= new mongoose.Schema(
             ref:"User",
             default:null
         },
-        addresses:[
+        addresses: [
             {
                 receiverName: String,
                 receiverPhone: String,
@@ -73,6 +73,11 @@ const User= new mongoose.Schema(
                 district: String,
                 ward: String,
                 detail: String,
+                detailAddress: String,
+                provinceId: Number,
+                districtId: Number,
+                wardId: Number,
+                label: { type: String, default: "Nhà riêng" },
                 isDefault: { type: Boolean, default: false },
             }
         ],

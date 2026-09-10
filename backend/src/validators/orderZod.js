@@ -21,6 +21,7 @@ export const checkoutZod = z.object({
         paymentMethod: z.enum(["COD", "SEPAY", "MOMO", "VNPAY", "ESCROW"], {
             required_error: "Phương thức thanh toán là bắt buộc"
         }),
+        shippingService: z.enum(["VCN", "VTK"]).optional().default("VTK"),
         couponCode: z.string().trim().optional(),
         note: z.string().trim().optional()
     })

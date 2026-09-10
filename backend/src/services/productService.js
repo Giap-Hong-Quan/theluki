@@ -149,25 +149,63 @@ export const decreaseProductStock = async (productId, color, size, quantity, ses
 
 /**
  * Hoàn lại tồn kho khi đơn hàng bị hủy (ngược lại với `decreaseProductStock` ở trên).
- * Không dùng session vì thường được gọi độc lập (lúc hủy đơn, hoặc từ cron job), không nằm
- * trong transaction tạo đơn ban đầu.
+ * Hỗ trợ tìm kiếm theo variantId & sizeId hoặc color & size.
  */
-export const restoreProductStock = async (productId, color, size, quantity) => {
+export const restoreProductStock = async (productId, colorOrOptions, sizeParam, quantityParam) => {
+    let variantId = null;
+    let sizeId = null;
+    let color = null;
+    let size = null;
+    let quantity = 1;
+
+    if (typeof colorOrOptions === "object" && colorOrOptions !== null) {
+        variantId = colorOrOptions.variantId;
+        sizeId = colorOrOptions.sizeId;
+        color = colorOrOptions.color;
+        size = colorOrOptions.size;
+        quantity = colorOrOptions.quantity ?? 1;
+    } else {
+        color = colorOrOptions;
+        size = sizeParam;
+        quantity = quantityParam ?? 1;
+    }
+
     const product = await Product.findById(productId);
     if (!product) return; // Sản phẩm có thể đã bị xóa hẳn, bỏ qua không hoàn kho được nữa
 
     if (product.variants && product.variants.length > 0) {
-        const colorVar = product.variants.find(
-            (v) => v.color && v.color.trim().toLowerCase() === color.trim().toLowerCase()
-        );
-        const sizeOpt = colorVar?.sizes?.find(
-            (s) => s.size && s.size.trim().toLowerCase() === size.trim().toLowerCase()
-        );
-        if (sizeOpt) sizeOpt.stock += quantity;
+        let colorVar = null;
+        if (variantId) {
+            colorVar = product.variants.find(
+                (v) => v._id && v._id.toString() === variantId.toString()
+            );
+        }
+        if (!colorVar && color) {
+            colorVar = product.variants.find(
+                (v) => v.color && v.color.trim().toLowerCase() === color.trim().toLowerCase()
+            );
+        }
+
+        if (colorVar && colorVar.sizes) {
+            let sizeOpt = null;
+            if (sizeId) {
+                sizeOpt = colorVar.sizes.find(
+                    (s) => s._id && s._id.toString() === sizeId.toString()
+                );
+            }
+            if (!sizeOpt && size) {
+                sizeOpt = colorVar.sizes.find(
+                    (s) => s.size && s.size.trim().toLowerCase() === size.trim().toLowerCase()
+                );
+            }
+            if (sizeOpt) {
+                sizeOpt.stock += quantity;
+            }
+        }
     } else {
         product.stock += quantity;
     }
 
-    product.sold = Math.max(0, product.sold - quantity);
+    product.sold = Math.max(0, (product.sold || 0) - quantity);
     await product.save();
 };

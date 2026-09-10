@@ -30,12 +30,21 @@ export interface UserRole {
 
 export interface UserAddress {
   _id?: string;
+  receiverName?: string;
   full_name?: string;
+  receiverPhone?: string;
   phone?: string;
-  province?: string;
-  district?: string;
-  ward?: string;
+  province: string;
+  district: string;
+  ward: string;
+  provinceId?: number;
+  districtId?: number;
+  wardId?: number;
+  detailAddress?: string;
+  detail?: string;
   address_detail?: string;
+  label?: string;
+  isDefault?: boolean;
   is_default?: boolean;
 }
 

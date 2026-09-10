@@ -3,7 +3,8 @@ import {
     checkoutController,
     getMyOrdersController,
     getOrderDetailController,
-    cancelOrderController
+    cancelOrderController,
+    calculateShippingFeeController
 } from "../controllers/orderController.js";
 import { validate } from "../middlewares/validate.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
@@ -13,6 +14,8 @@ const orderRouter = express.Router();
 
 // Tất cả route đơn hàng đều yêu cầu đăng nhập
 orderRouter.use(verifyToken);
+
+orderRouter.post("/calculate-fee", calculateShippingFeeController);
 
 /**
  * @swagger

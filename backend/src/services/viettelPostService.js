@@ -1,20 +1,45 @@
 import axios from "axios";
 
-const BASE_URL = process.env.VIETTELPOST_BASE_URL;
-const TOKEN = process.env.VIETTELPOST_TOKEN;
-
 // Danh sách dịch vụ cho khách chọn - cố định 2 loại theo đúng ViettelPost cung cấp
 const SHIPPING_SERVICES = [
-    { code: "VCN", label: "Chuyển phát nhanh", description: "1 - 3 ngày, giao bằng đường hàng không/xe tải nhanh" },
-    { code: "VTK", label: "Chuyển phát tiết kiệm", description: "3 - 7 ngày, giao bằng đường bộ, phù hợp hàng nặng/cồng kềnh" }
+    {
+        code: "VCN",
+        label: "Chuyển phát nhanh",
+        description: "1 - 3 ngày, giao bằng đường hàng không/xe tải nhanh",
+        defaultFee: 35000
+    },
+    {
+        code: "VTK",
+        label: "Chuyển phát tiết kiệm",
+        description: "3 - 7 ngày, giao bằng đường bộ, phù hợp hàng nặng/cồng kềnh",
+        defaultFee: 25000
+    }
 ];
 
 /**
- * Gọi API tính cước 1 LẦN cho 1 mã dịch vụ cụ thể
+ * Chuẩn hóa địa chỉ sang dạng chuỗi tự nhiên 3 cấp:
+ * "Số nhà tên đường, Phường/Xã, Quận/Huyện, Tỉnh/Thành phố"
+ */
+export const formatAddress = (addr) => {
+    if (!addr) return "";
+    if (typeof addr === "string") return addr.trim();
+
+    const parts = [
+        addr.detailAddress,
+        addr.ward,
+        addr.district,
+        addr.province
+    ].filter((item) => item && typeof item === "string" && item.trim() !== "");
+
+    return parts.join(", ");
+};
+
+/**
+ * Gọi API tính cước /v2/order/getPriceNlp cho 1 mã dịch vụ cụ thể
+ * Dùng địa chỉ text tự nhiên 3 cấp (không dùng ID)
  */
 const getPriceByService = async ({
-    provinceId,
-    wardId,
+    receiverAddress,
     weight,
     productPrice,
     codAmount,
@@ -23,50 +48,75 @@ const getPriceByService = async ({
     try {
         const baseUrl = process.env.VIETTELPOST_BASE_URL || "https://partnerdev.viettelpost.vn";
         const token = process.env.VIETTELPOST_TOKEN;
+        const senderAddress =
+            process.env.SENDER_ADDRESS || "Xã Cát Minh, Huyện Phù Cát, Tỉnh Bình Định";
+        const receiverAddressStr = formatAddress(receiverAddress);
+
+        if (!receiverAddressStr) {
+            console.warn("ViettelPost getPriceNlp: Địa chỉ người nhận đang trống");
+            return null;
+        }
 
         const res = await axios.post(
-            `${baseUrl}/v2/order/getPrice`,
+            `${baseUrl}/v2/order/getPriceNlp`,
             {
-                SENDER_PROVINCE: Number(process.env.SENDER_PROVINCE || 44),
-                SENDER_WARD: Number(process.env.SENDER_WARD || 49186),
-                RECEIVER_PROVINCE: Number(provinceId),
-                RECEIVER_WARD: Number(wardId),
                 PRODUCT_WEIGHT: Number(weight || 300),
                 PRODUCT_PRICE: Number(productPrice || 0),
                 MONEY_COLLECTION: Number(codAmount || 0),
+                ORDER_SERVICE: orderService,
+                SENDER_ADDRESS: senderAddress,
+                RECEIVER_ADDRESS: receiverAddressStr,
                 PRODUCT_TYPE: "HH",
                 NATIONAL_TYPE: 1,
-                ORDER_SERVICE: orderService
+                TYPE: 1
             },
-            { headers: { Token: token } }
+            {
+                headers: {
+                    Token: token,
+                    "Content-Type": "application/json"
+                }
+            }
         );
 
-        if (res.data?.status !== 200 || !res.data?.data) {
-            console.warn(`ViettelPost getPrice warning (${orderService}):`, res.data?.message || res.data);
+        if (res.data?.status === 200 && res.data?.data) {
+            return res.data.data;
         }
-        return res.data?.data;
+
+        console.warn(`ViettelPost getPriceNlp warning (${orderService}):`, res.data?.message || res.data);
+        return null;
     } catch (error) {
-        console.error(`ViettelPost getPrice error (${orderService}):`, error.response?.data || error.message);
+        console.error(`ViettelPost getPriceNlp error (${orderService}):`, error.response?.data || error.message);
         return null;
     }
 };
 
 /**
- * Tính cước cho CẢ 2 dịch vụ cùng lúc (song song bằng Promise.all, nhanh hơn gọi tuần tự),
- * trả về mảng để FE render radio button cho khách chọn "Nhanh" hay "Tiết kiệm".
+ * Tính cước cho CẢ 2 dịch vụ cùng lúc (song song bằng Promise.all),
+ * trả về mảng gồm cước thực tế từ ViettelPost NLP (có fallback an toàn khi sandbox bảo trì)
  */
 export const calculateFee = async (params) => {
     const results = await Promise.all(
         SHIPPING_SERVICES.map(async (service) => {
-            const priceData = await getPriceByService({ ...params, orderService: service.code });
+            const priceData = await getPriceByService({
+                ...params,
+                orderService: service.code
+            });
+
+            const fee =
+                typeof priceData?.MONEY_TOTAL === "number"
+                    ? priceData.MONEY_TOTAL
+                    : typeof priceData?.GIA_CUOC === "number"
+                    ? priceData.GIA_CUOC
+                    : service.defaultFee;
+
             return {
                 serviceCode: service.code,
                 label: service.label,
                 description: service.description,
-                fee: priceData?.MONEY_TOTAL // TODO: đổi đúng tên field theo response thật
+                fee
             };
         })
     );
 
     return results;
-};
+};

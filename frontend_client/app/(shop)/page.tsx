@@ -74,14 +74,7 @@ export default function Home() {
       <section className="relative w-full overflow-hidden border border-neutral-900 bg-neutral-100">
         <Link href="/product" className="block w-full">
           <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full">
-            <img
-              src={
-                heroBanner?.image ||
-                "https://theciu.vn/_next/image?url=https%3A%2F%2Fminio.theciu.vn%2Ftheciu-beta%2F2500%2Fimages%2FltPBJMYAyZ67ltZxFE8V0KTFzy0oc9JjACFRb1ez.jpg%3Fv%3D1778063804&w=1920&q=75"
-              }
-              alt="The Luki Campaign"
-              className="w-full h-full object-cover object-center"
-            />
+            <img src={ heroBanner?.image} alt="The Luki Campaign" className="w-full h-full object-cover object-center"/>
           </div>
         </Link>
       </section>
@@ -306,36 +299,54 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. FLOATING PROMO WIDGET (NẾU CÓ BANNER POPUP ACTIVE) */}
+      {/* 8. CENTERED PROMO POPUP MODAL (NẾU CÓ BANNER POPUP ACTIVE) */}
       {showPopup && popupBanner?.image && (
-        <aside
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-300"
+          onClick={handleClosePopup}
+          role="dialog"
+          aria-modal="true"
           aria-label="Khuyến mãi đặc biệt"
-          className="fixed bottom-6 right-6 z-50 max-w-[220px] sm:max-w-[260px] bg-white border border-neutral-900 shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-500 hidden md:block"
         >
-          <button
-            type="button"
-            onClick={handleClosePopup}
-            className="absolute top-2 right-2 z-10 w-6 h-6 bg-black/80 hover:bg-black text-white flex items-center justify-center cursor-pointer transition-colors"
-            title="Đóng thông báo"
+          <div
+            className="relative w-full max-w-xs sm:max-w-105 bg-white border border-neutral-900 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
           >
-            <X className="w-3.5 h-3.5" />
-          </button>
-          <Link href="/product" className="block w-full aspect-[4/5] bg-neutral-100 group">
-            <img
-              src={popupBanner.image}
-              alt="Promotion"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-          </Link>
-          <div className="p-2.5 bg-black text-center">
+            {/* Nút đóng */}
+            <button
+              type="button"
+              onClick={handleClosePopup}
+              className="absolute top-3 right-3 z-20 w-8 h-8 bg-black/80 hover:bg-black text-white flex items-center justify-center cursor-pointer transition-colors shadow-md"
+              title="Đóng thông báo"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Ảnh banner */}
             <Link
               href="/product"
-              className="block w-full text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider font-mono hover:text-neutral-300 transition-colors"
+              onClick={handleClosePopup}
+              className="block w-full aspect-[4/5] bg-neutral-100 group overflow-hidden"
             >
-              KHÁM PHÁ NGAY →
+              <img
+                src={popupBanner.image}
+                alt="Promotion Popup"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
             </Link>
+
+            {/* Thanh nút CTA bên dưới */}
+            <div className="p-3 bg-black text-center">
+              <Link
+                href="/product"
+                onClick={handleClosePopup}
+                className="block w-full text-white text-xs font-bold uppercase tracking-widest font-mono hover:text-neutral-300 transition-colors"
+              >
+                KHÁM PHÁ NGAY →
+              </Link>
+            </div>
           </div>
-        </aside>
+        </div>
       )}
     </div>
   );

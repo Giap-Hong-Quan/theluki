@@ -1,35 +1,30 @@
 import mongoose from "mongoose";
 import { generateOrderCode } from "../utils/generateOrderCode.js";
-
-/**
- * Sub-schema: Snapshot từng sản phẩm trong đơn hàng.
- * Lý do phải "snapshot" (chép cứng dữ liệu) thay vì chỉ lưu ref tới Product:
- * nếu sau này Admin đổi giá/tên/ảnh sản phẩm, đơn hàng CŨ vẫn phải hiển thị đúng
- * thông tin tại THỜI ĐIỂM khách đặt hàng (hóa đơn không được tự đổi theo giá mới).
- */
 const OrderItemSchema = new mongoose.Schema(
     {
-        product: { // Ref tới Product gốc - dùng cho nút "Mua lại" và thống kê sản phẩm bán chạy
+        product: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Product",
             required: true
         },
-        name: { type: String, trim: true, required: true },     // Tên sản phẩm tại thời điểm mua
-        color: { type: String, trim: true, required: true },    // Phân loại màu đã chọn
-        size: { type: String, trim: true, required: true },     // Phân loại size đã chọn
-        sku: { type: String, trim: true, uppercase: true, required: true }, // Mã SKU biến thể cụ thể
-        quantity: { type: Number, required: true, min: 1 },     // Số lượng mua
-        price: { type: Number, required: true, min: 0 },        // Đơn giá TẠI THỜI ĐIỂM mua (không đổi dù giá SP sau này thay đổi)
-        thumbnail: { type: String, trim: true, default: null }  // Ảnh đại diện tại thời điểm mua
+        variantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            default: null
+        },
+        sizeId: {
+            type: mongoose.Schema.Types.ObjectId,
+            default: null
+        },
+        name: { type: String, trim: true, required: true },
+        color: { type: String, trim: true, required: true },
+        size: { type: String, trim: true, required: true },
+        sku: { type: String, trim: true, uppercase: true, required: true },
+        quantity: { type: Number, required: true, min: 1 },
+        price: { type: Number, required: true, min: 0 },
+        thumbnail: { type: String, trim: true, default: null }
     },
     { _id: true }
 );
-
-/**
- * Sub-schema: Nhật ký lịch sử thay đổi trạng thái (Audit log).
- * `type` giúp phân biệt sự kiện đến từ luồng nào (đơn hàng / thanh toán / vận chuyển)
- * để FE lọc hiển thị đúng tab timeline, tránh trộn lẫn 3 luồng khó đọc.
- */
 const OrderTimelineSchema = new mongoose.Schema(
     {
         type: { // Nguồn gốc sự kiện: đổi trạng thái đơn / thanh toán / vận chuyển
@@ -67,10 +62,6 @@ const OrderSchema = new mongoose.Schema(
             index: true
         },
         items: [OrderItemSchema], // Danh sách sản phẩm đã mua (snapshot, xem giải thích ở trên)
-
-        // ============ ĐỊA CHỈ GIAO HÀNG (SNAPSHOT) ============
-        // Snapshot tại thời điểm đặt, KHÔNG ref tới địa chỉ đã lưu của User, vì User có thể
-        // sửa/xóa địa chỉ đó sau này nhưng đơn hàng cũ vẫn phải giữ đúng địa chỉ đã giao.
         shippingAddress: {
             receiverName: { type: String, trim: true, required: true },  // Tên người nhận (có thể khác chủ tài khoản)
             receiverPhone: { type: String, trim: true, required: true }, // SĐT người nhận - ViettelPost dùng để liên hệ khi giao
