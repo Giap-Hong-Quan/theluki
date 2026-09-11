@@ -253,18 +253,9 @@ export default function CheckoutPage() {
   // Ghi chú cho shipper
   const [shippingNote, setShippingNote] = useState("");
 
-  // Phương thức vận chuyển cố định VCN (ViettelPost Nhanh) & state thanh toán
-  const selectedShipping = "VCN" as const;
+  // Phương thức vận chuyển cố định theo chính sách Shop
+  const selectedShipping = "STANDARD" as const;
   const [selectedPayment, setSelectedPayment] = useState("COD");
-
-  // Dịch vụ vận chuyển ViettelPost Chuyển Phát Nhanh mặc định
-  const [shippingService, setShippingService] = useState({
-    code: "VCN" as const,
-    name: "ViettelPost Chuyển Phát Nhanh",
-    time: "1 - 3 ngày (Nội tỉnh 24h)",
-    desc: "Giao hàng qua đường hàng không / trục ưu tiên, tối ưu cho thời trang",
-    price: 0,
-  });
 
   // State mã giảm giá
   const [couponInput, setCouponInput] = useState("");
@@ -281,10 +272,46 @@ export default function CheckoutPage() {
   // Mutations
   const addAddressMutation = useAddAddress();
   const setDefaultAddressMutation = useSetDefaultAddress();
-  const calculateFeeMutation = useCalculateShippingFee();
   const checkoutMutation = useCheckout();
+  const calculateFeeMutation = useCalculateShippingFee();
 
-  // Tính phí vận chuyển ViettelPost khi địa chỉ thay đổi
+  // State lưu kết quả cước phí do API trả về
+  const [apiShippingFee, setApiShippingFee] = useState<number | null>(null);
+  const [apiShippingInfo, setApiShippingInfo] = useState<{
+    time: string;
+    desc: string;
+  } | null>(null);
+
+  // Tính toán tiền hàng tạm tính
+  const subtotal = useMemo(() => {
+    return selectedCartItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+  }, [selectedCartItems]);
+
+  const hasAddress = Boolean(
+    activeAddress?.province && activeAddress?.district && activeAddress?.ward
+  );
+
+  // Xác định địa chỉ nhận có thuộc cùng tỉnh với Shop (Bình Định) hay không
+  const isSameProvince = useMemo(() => {
+    if (Number(activeAddress?.provinceId) === 40) return true;
+    if (!activeAddress?.province) return false;
+    const clean = (s: string) =>
+      s
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[đð]/gi, "d")
+        .replace(/^(tinh|thanh pho|tp\.?|tp)\s+/i, "")
+        .trim();
+    return clean(activeAddress.province).includes("binh dinh");
+  }, [activeAddress?.province, activeAddress?.provinceId]);
+
+  const isFreeShipByShop = subtotal >= 300000;
+
+  // Gọi API tính phí ship khi thay đổi địa chỉ nhận hoặc tổng giá trị hàng
   useEffect(() => {
     if (
       activeAddress?.province &&
@@ -292,7 +319,7 @@ export default function CheckoutPage() {
       activeAddress?.ward &&
       selectedCartItems.length > 0
     ) {
-      calculateFeeMutation.mutate(  
+      calculateFeeMutation.mutate(
         {
           shippingAddress: {
             province: activeAddress.province,
@@ -303,30 +330,24 @@ export default function CheckoutPage() {
               activeAddress.detail ||
               activeAddress.address_detail,
           },
+          productPrice: subtotal,
         },
         {
           onSuccess: (res: any) => {
-            if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-              const vcnMatch = res.data.find(
-                (opt: any) => opt.serviceCode === "VCN"
-              );
-              if (vcnMatch && typeof vcnMatch.fee === "number") {
-                const isInternalProvince = activeAddress?.province
-                  ?.toLowerCase()
-                  .includes("bình định");
-                const finalFee =
-                  isInternalProvince && vcnMatch.fee >= 35000
-                    ? 16000
-                    : vcnMatch.fee;
-
-                setShippingService((prev) => ({
-                  ...prev,
-                  price: finalFee,
-                  time: isInternalProvince
-                    ? "Trong 24 giờ"
-                    : vcnMatch.deliveryTime || "1 - 3 ngày",
-                }));
-              }
+            const dataList = Array.isArray(res?.data) ? res.data : [res?.data];
+            const opt = dataList[0];
+            if (opt && typeof opt.fee === "number") {
+              setApiShippingFee(opt.fee);
+              setApiShippingInfo({
+                time: opt.deliveryTime || (opt.fee === 20000 ? "Trong 24 giờ" : "1 - 3 ngày"),
+                desc:
+                  opt.description ||
+                  (opt.fee === 0
+                    ? "Đơn từ 300.000đ - Miễn phí vận chuyển toàn quốc"
+                    : opt.fee === 20000
+                    ? "Nội tỉnh (Bình Định) - Đồng giá 20.000đ"
+                    : "Ngoại tỉnh - Đồng giá 30.000đ"),
+              });
             }
           },
         }
@@ -336,7 +357,8 @@ export default function CheckoutPage() {
     activeAddress?.province,
     activeAddress?.district,
     activeAddress?.ward,
-    selectedCartItems.length,
+    selectedAddressId,
+    subtotal,
   ]);
 
   // Xử lý submit lưu địa chỉ mới vào DB
@@ -408,18 +430,32 @@ export default function CheckoutPage() {
     setDefaultAddressMutation.mutate(id);
   };
 
-  // Tính toán tài chính
-  const subtotal = useMemo(() => {
-    return selectedCartItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-  }, [selectedCartItems]);
+  // Tính toán tài chính - Tính phí ship ưu tiên từ kết quả API
 
-  const hasAddress = Boolean(
-    activeAddress?.province && activeAddress?.district && activeAddress?.ward
-  );
-  const shippingFee = hasAddress ? (shippingService.price || 28000) : 0;
+  // Tính phí ship ưu tiên từ kết quả API
+  const shippingFee = useMemo(() => {
+    if (!hasAddress) return 0;
+    if (apiShippingFee !== null) return apiShippingFee;
+    if (isFreeShipByShop) return 0;
+    return isSameProvince ? 20000 : 30000;
+  }, [hasAddress, apiShippingFee, isFreeShipByShop, isSameProvince]);
+
+  const shippingService = useMemo(() => {
+    return {
+      code: "STANDARD" as const,
+      name: "Giao Hàng Tiêu Chuẩn (ViettelPost)",
+      time: apiShippingInfo?.time || (isSameProvince ? "Trong 24 giờ" : "1 - 3 ngày"),
+      desc:
+        apiShippingInfo?.desc ||
+        (isFreeShipByShop
+          ? "Đơn từ 300.000đ - Miễn phí vận chuyển toàn quốc"
+          : isSameProvince
+          ? "Nội tỉnh (Bình Định) - Đồng giá 20.000đ"
+          : "Ngoại tỉnh - Đồng giá 30.000đ"),
+      price: shippingFee,
+    };
+  }, [apiShippingInfo, isSameProvince, isFreeShipByShop, shippingFee]);
+
   const discountAmount = useMemo(() => {
     if (!appliedCoupon) return 0;
     if (appliedCoupon.code === "FREESHIP") {
@@ -720,12 +756,25 @@ export default function CheckoutPage() {
                       </div>
 
                       <div className="text-right shrink-0">
-                        <span className="font-mono text-xs font-bold text-zinc-900 block">
-                          {formatPrice(shippingFee)}
-                        </span>
-                        <span className="text-[10px] text-emerald-600 font-medium block mt-0.5">
-                          Đang áp dụng
-                        </span>
+                        {shippingFee === 0 ? (
+                          <>
+                            <span className="font-mono text-xs font-bold text-emerald-600 block">
+                              0₫ (MIỄN PHÍ)
+                            </span>
+                            <span className="inline-block px-1.5 py-0.5 text-[9px] font-bold uppercase bg-emerald-100 text-emerald-700 mt-1">
+                              FREESHIP
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-mono text-xs font-bold text-zinc-900 block">
+                              {formatPrice(shippingFee)}
+                            </span>
+                            <span className="text-[10px] text-emerald-600 font-medium block mt-0.5">
+                              Đang áp dụng
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   ) : (

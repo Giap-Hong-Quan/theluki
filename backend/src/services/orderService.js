@@ -108,17 +108,16 @@ export const createOrderFromCart = async (userId, payload) => {
             });
         }
 
-        const itemsSubtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity,0);
-        // 2. Tính phí ship ViettelPost theo địa chỉ 3 cấp
-        const codAmount = paymentMethod === "COD" ? itemsSubtotal : 0;
+        const itemsSubtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        // 2. Tính phí ship theo chính sách của Shop (20k nội tỉnh, 30k ngoại tỉnh, đơn >= 300k Free ship)
         const shippingFeeResults = await calculateFee({
             receiverAddress: shippingAddress,
             weight: totalWeight || 300,
             productPrice: itemsSubtotal,
-            codAmount
+            codAmount: paymentMethod === "COD" ? itemsSubtotal : 0
         });
 
-        const selectedOption =shippingFeeResults?.find((opt) => opt.serviceCode === (shippingService || "VTK")) || shippingFeeResults?.[0];
+        const selectedOption = shippingFeeResults?.[0];
         const finalShippingFee = typeof selectedOption?.fee === "number" ? selectedOption.fee : 30000;
 
         // 3. Áp dụng mã giảm giá Coupon nếu có
@@ -209,25 +208,24 @@ export const createOrderFromCart = async (userId, payload) => {
  * Tính trước phí ship cho giỏ hàng hiện tại với địa chỉ nhận hàng cụ thể
  */
 export const calculateShippingFee = async (userId, payload) => {
-    const { shippingAddress, codAmount = 0 } = payload;
+    const { shippingAddress, productPrice, codAmount = 0 } = payload;
     if (!shippingAddress) {
         throw new ApiError(400, "Địa chỉ nhận hàng là bắt buộc");
     }
 
-    const cart = await Cart.findOne({ user: userId });
-    const selectedItems = cart?.items?.filter((item) => item.isSelected) || [];
+    let itemsSubtotal = typeof productPrice === "number" ? Number(productPrice) : null;
 
-    let totalWeight = 0;
-    let itemsSubtotal = 0;
-
-    for (const item of selectedItems) {
-        itemsSubtotal += item.price * item.quantity;
-        totalWeight += 300 * item.quantity;
+    if (itemsSubtotal === null) {
+        const cart = await Cart.findOne({ user: userId });
+        const selectedItems = cart?.items?.filter((item) => item.isSelected) || [];
+        itemsSubtotal = 0;
+        for (const item of selectedItems) {
+            itemsSubtotal += item.price * item.quantity;
+        }
     }
 
     const fees = await calculateFee({
         receiverAddress: shippingAddress,
-        weight: totalWeight || 300,
         productPrice: itemsSubtotal,
         codAmount
     });

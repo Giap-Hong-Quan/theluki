@@ -11,7 +11,7 @@ export interface ShippingAddressInput {
 export interface CheckoutPayload {
   shippingAddress: ShippingAddressInput;
   paymentMethod: "COD" | "SEPAY" | "MOMO" | "VNPAY";
-  shippingService?: "VCN" | "VTK";
+  shippingService?: "STANDARD" | "VCN" | "VTK" | string;
   couponCode?: string;
   note?: string;
 }
@@ -29,7 +29,7 @@ export interface CalculateFeePayload {
 }
 
 export interface ShippingFeeOption {
-  serviceCode: "VTK" | "VCN";
+  serviceCode: "STANDARD" | "VTK" | "VCN" | string;
   serviceName: string;
   fee: number;
   deliveryTime: string;
