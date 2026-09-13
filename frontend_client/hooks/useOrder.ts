@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { orderService } from "@/services/orderService";
 import { CheckoutPayload, CalculateFeePayload } from "@/types/orderType";
 import toast from "react-hot-toast";
@@ -24,7 +24,40 @@ export const useCalculateShippingFee = () => {
   return useMutation({
     mutationFn: (payload: CalculateFeePayload) => orderService.calculateShippingFee(payload),
     onError: (error: any) => {
-      console.warn("Lỗi tính cước ViettelPost:", error?.message);
+      console.warn("Lỗi tính cước:", error?.message);
     },
   });
 };
+
+export const useMyOrders = (params?: { page?: number; limit?: number; status?: string }) => {
+  return useQuery({
+    queryKey: ["myOrders", params],
+    queryFn: () => orderService.getMyOrders(params),
+  });
+};
+
+export const useOrderDetail = (orderCode: string) => {
+  return useQuery({
+    queryKey: ["orderDetail", orderCode],
+    queryFn: () => orderService.getOrderDetail(orderCode),
+    enabled: Boolean(orderCode),
+  });
+};
+
+export const useCancelOrder = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orderCode, reason }: { orderCode: string; reason?: string }) =>
+      orderService.cancelOrder(orderCode, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myOrders"] });
+      queryClient.invalidateQueries({ queryKey: ["orderDetail"] });
+      toast.success("Hủy đơn hàng thành công!");
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Không thể hủy đơn hàng!");
+    },
+  });
+};
+
+

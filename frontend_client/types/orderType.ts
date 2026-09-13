@@ -29,10 +29,11 @@ export interface CalculateFeePayload {
 }
 
 export interface ShippingFeeOption {
-  serviceCode: "STANDARD" | "VTK" | "VCN" | string;
-  serviceName: string;
   fee: number;
-  deliveryTime: string;
+  isSameProvince?: boolean;
+  serviceCode?: string;
+  serviceName?: string;
+  deliveryTime?: string;
 }
 
 export interface OrderItem {
@@ -48,6 +49,13 @@ export interface OrderItem {
   thumbnail?: string;
 }
 
+export interface OrderTimeline {
+  type: "ORDER" | "PAYMENT" | "SHIPPING";
+  status: string;
+  note?: string;
+  updatedAt: string;
+}
+
 export interface OrderResponse {
   _id: string;
   orderCode: string;
@@ -56,9 +64,17 @@ export interface OrderResponse {
   shippingAddress: ShippingAddressInput;
   shippingInfo: {
     carrier: string;
+    trackingCode?: string | null;
+    status: string;
     shippingFee: number;
     codAmount: number;
-    serviceCode: string;
+    estimatedDeliveryDate?: string | null;
+  };
+  paymentInfo: {
+    method: "COD" | "SEPAY" | "MOMO" | "VNPAY" | "ESCROW" | string;
+    status: "PENDING" | "PAID" | "FAILED" | "REFUNDED" | string;
+    transactionId?: string | null;
+    paidAt?: string | null;
   };
   financials: {
     itemsSubtotal: number;
@@ -66,8 +82,29 @@ export interface OrderResponse {
     discountAmount: number;
     finalAmount: number;
   };
-  paymentMethod: string;
-  paymentStatus: string;
-  orderStatus: string;
+  coupon?: {
+    code: string;
+    discountAmount: number;
+  };
+  orderStatus:
+    | "PENDING"
+    | "PROCESSING"
+    | "SHIPPING"
+    | "DELIVERED"
+    | "COMPLETED"
+    | "CANCELLED"
+    | "RETURNED"
+    | string;
+  timeline?: OrderTimeline[];
+  note?: string;
+  cancelReason?: string | null;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface MyOrdersResponse {
+  orders: OrderResponse[];
+  total: number;
+  page: number;
+  limit: number;
 }

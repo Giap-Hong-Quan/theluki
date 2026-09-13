@@ -7,11 +7,6 @@ const shippingAddressZod = z.object({
     district: z.string({ required_error: "Quận/Huyện là bắt buộc" }).trim().min(1),
     ward: z.string({ required_error: "Phường/Xã là bắt buộc" }).trim().min(1),
     detailAddress: z.string({ required_error: "Địa chỉ chi tiết là bắt buộc" }).trim().min(1),
-    // 3 mã ID chuẩn ViettelPost - optional ở validator vì FE có thể chưa map được ngay,
-    // nhưng thực tế BẮT BUỘC phải có trước khi gọi API tạo vận đơn thật ở Phase 2.
-    provinceId: z.string().trim().optional(),
-    districtId: z.string().trim().optional(),
-    wardId: z.string().trim().optional(),
     note: z.string().trim().optional()
 });
 
@@ -21,7 +16,7 @@ export const checkoutZod = z.object({
         paymentMethod: z.enum(["COD", "SEPAY", "MOMO", "VNPAY", "ESCROW"], {
             required_error: "Phương thức thanh toán là bắt buộc"
         }),
-        shippingService: z.enum(["VCN", "VTK"]).optional().default("VTK"),
+        shippingService: z.string().optional().default("STANDARD"),
         couponCode: z.string().trim().optional(),
         note: z.string().trim().optional()
     })

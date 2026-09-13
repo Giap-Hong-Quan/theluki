@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import http from "http";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -9,6 +10,7 @@ import router from "./routes/index.js";
 import { seedData } from "./config/seeData.js";
 import { swaggerDocs } from './config/swagger.js';
 import { errorHandle } from './middlewares/errorMiddleware.js';
+import { initSocket } from './config/socket.js';
 
 const app = express();
 app.use(cors({
@@ -39,7 +41,9 @@ seedData();
 swaggerDocs(app);
 app.use('/api',router);
 app.use(errorHandle);
+const server = http.createServer(app);
+initSocket(server);
 const port = process.env.PORT || 8000;
-app.listen(port,()=>{
-    console.log(`Runnig with ${port}`)
+server.listen(port,()=>{
+    console.log(`Server & Socket running with port ${port}`.green);
 })

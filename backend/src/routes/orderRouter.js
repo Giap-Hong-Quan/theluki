@@ -4,10 +4,12 @@ import {
     getMyOrdersController,
     getOrderDetailController,
     cancelOrderController,
-    calculateShippingFeeController
+    calculateShippingFeeController,
+    getAllOrdersAdminController,
+    updateOrderStatusAdminController
 } from "../controllers/orderController.js";
 import { validate } from "../middlewares/validate.js";
-import { verifyToken } from "../middlewares/authMiddleware.js";
+import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
 import { checkoutZod, cancelOrderZod, getMyOrdersZod } from "../validators/orderZod.js";
 
 const orderRouter = express.Router();
@@ -51,9 +53,7 @@ orderRouter.post("/calculate-fee", calculateShippingFeeController);
  *                   district: { type: string, example: "Quận 1" }
  *                   ward: { type: string, example: "Phường Bến Nghé" }
  *                   detailAddress: { type: string, example: "123 Nguyễn Huệ" }
- *                   provinceId: { type: string }
- *                   districtId: { type: string }
- *                   wardId: { type: string }
+ *                   note: { type: string, example: "Giao giờ hành chính" }
  *               paymentMethod:
  *                 type: string
  *                 enum: [COD, SEPAY, MOMO, VNPAY, ESCROW]
@@ -104,6 +104,11 @@ orderRouter.post("/checkout", validate(checkoutZod), checkoutController);
  *         description: Lỗi hệ thống
  */
 orderRouter.get("/", validate(getMyOrdersZod), getMyOrdersController);
+orderRouter.get("/my-orders", validate(getMyOrdersZod), getMyOrdersController);
+
+// ================= ROUTE DÀNH CHO ADMIN / STAFF =================
+orderRouter.get("/admin/all", authorizeRoles("admin", "staff"), getAllOrdersAdminController);
+orderRouter.put("/admin/:orderCode/status", authorizeRoles("admin", "staff"), updateOrderStatusAdminController);
 
 /**
  * @swagger

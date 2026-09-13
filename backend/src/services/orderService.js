@@ -5,13 +5,47 @@ import Product from "../models/Product.js";
 import ApiError from "../exceptions/ApiError.js";
 import { restoreProductStock } from "./productService.js";
 import { validateCoupon, calculateDiscountAmount, applyCouponAtomic } from "./couponService.js";
-import { calculateFee } from "./viettelPostService.js";
+import { getIO } from "../config/socket.js";
+// check tỉnh
+export const isSameProvince = (receiverAddress) => {
+    if (!receiverAddress) return false;
+    // Nhận vào object địa chỉ hoặc chuỗi text
+    const provinceStr =typeof receiverAddress === "object"? receiverAddress.province || "" : String(receiverAddress);
+
+    const clean = provinceStr
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[đð]/gi, "d")
+        .replace(/^(tinh|thanh pho|tp\.?|tp)\s+/i, "")
+        .trim();
+
+    return clean.includes("binh dinh");
+};
+
+
+// tính cước vận chuyển đơn giản
+export const calculateFee = async ({ receiverAddress, productPrice = 0 }) => {
+    const isSame = isSameProvince(receiverAddress);
+    const price = Number(productPrice) || 0;
+
+    let fee = isSame ? 20000 : 30000;
+    const freeThreshold = Number(process.env.FREE_SHIPPING_THRESHOLD) || 300000;
+    if (price >= freeThreshold) {
+        fee = 0;
+    }
+    return [
+        {
+            fee,
+            isSameProvince: isSame
+        }
+    ];
+};
 
 export const createOrderFromCart = async (userId, payload) => {
     const {
         shippingAddress,
         paymentMethod = "COD",
-        shippingService = "VTK",
         couponCode,
         note
     } = payload;
@@ -28,8 +62,7 @@ export const createOrderFromCart = async (userId, payload) => {
 
     try {
         const orderItems = [];
-        let totalWeight = 0;
-        // 1. Kiểm tra tồn kho, trừ kho và lấy đầy đủ variantId, sizeId
+        // Kiểm tra tồn kho, trừ kho và lấy đầy đủ variantId, sizeId
         for (const item of selectedItems) {
             const product = await Product.findById(item.product).session(session);
             if (!product || product.isActive === false || product.deletedAt) {
@@ -91,7 +124,6 @@ export const createOrderFromCart = async (userId, payload) => {
             // Tăng lượt bán và lưu lại trong transaction
             product.sold = (product.sold || 0) + item.quantity;
             await product.save({ session });
-            totalWeight += (product.weight || 300) * item.quantity;
 
             // Map item snapshot cho đơn hàng với ĐẦY ĐỦ variantId và sizeId
             orderItems.push({
@@ -107,20 +139,17 @@ export const createOrderFromCart = async (userId, payload) => {
                 thumbnail: resolvedThumbnail
             });
         }
-
         const itemsSubtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        // 2. Tính phí ship theo chính sách của Shop (20k nội tỉnh, 30k ngoại tỉnh, đơn >= 300k Free ship)
+        // Tính phí ship theo chính sách của Shop (20k nội tỉnh, 30k ngoại tỉnh, đơn >= 300k Free ship)
         const shippingFeeResults = await calculateFee({
             receiverAddress: shippingAddress,
-            weight: totalWeight || 300,
-            productPrice: itemsSubtotal,
-            codAmount: paymentMethod === "COD" ? itemsSubtotal : 0
+            productPrice: itemsSubtotal
         });
 
         const selectedOption = shippingFeeResults?.[0];
         const finalShippingFee = typeof selectedOption?.fee === "number" ? selectedOption.fee : 30000;
 
-        // 3. Áp dụng mã giảm giá Coupon nếu có
+        // Áp dụng mã giảm giá Coupon nếu có
         let coupon = null;
         let discountAmount = 0;
         if (couponCode && couponCode.trim()) {
@@ -144,8 +173,6 @@ export const createOrderFromCart = async (userId, payload) => {
                         district: shippingAddress.district,
                         ward: shippingAddress.ward,
                         detailAddress: shippingAddress.detailAddress,
-                        provinceId: shippingAddress.provinceId || null,
-                        wardId: shippingAddress.wardId || null,
                         note: shippingAddress.note || null
                     },
                     shippingInfo: {
@@ -192,9 +219,19 @@ export const createOrderFromCart = async (userId, payload) => {
         // 5. Xóa các món đã mua khỏi giỏ hàng
         cart.items = cart.items.filter((item) => !item.isSelected);
         await cart.save({ session });
-
         await session.commitTransaction();
         session.endSession();
+
+        // Bắn tín hiệu socket realtime sau khi giao dịch đã được commit vào DB
+        try {
+            getIO().emit("new_order", {
+                orderCode: newOrder.orderCode,
+                totalAmount: newOrder.financials?.finalAmount
+            });
+            console.log("📢 [Socket] Đã phát sự kiện new_order cho mã đơn:", newOrder.orderCode);
+        } catch (socketError) {
+            console.error("Lỗi phát socket new_order:", socketError.message);
+        }
 
         return newOrder;
     } catch (error) {
@@ -208,7 +245,7 @@ export const createOrderFromCart = async (userId, payload) => {
  * Tính trước phí ship cho giỏ hàng hiện tại với địa chỉ nhận hàng cụ thể
  */
 export const calculateShippingFee = async (userId, payload) => {
-    const { shippingAddress, productPrice, codAmount = 0 } = payload;
+    const { shippingAddress, productPrice } = payload;
     if (!shippingAddress) {
         throw new ApiError(400, "Địa chỉ nhận hàng là bắt buộc");
     }
@@ -226,8 +263,7 @@ export const calculateShippingFee = async (userId, payload) => {
 
     const fees = await calculateFee({
         receiverAddress: shippingAddress,
-        productPrice: itemsSubtotal,
-        codAmount
+        productPrice: itemsSubtotal
     });
 
     return fees;
@@ -250,10 +286,21 @@ export const getMyOrders = async (userId, { page = 1, limit = 10, status } = {})
 };
 
 /**
- * Lấy chi tiết 1 đơn hàng (kèm check quyền sở hữu - chỉ chủ đơn mới xem được)
+ * Lấy chi tiết 1 đơn hàng (hỗ trợ cả _id lẫn orderCode, Admin/Staff xem được mọi đơn, khách hàng chỉ xem đơn của mình)
  */
-export const getOrderDetail = async (userId, orderCode) => {
-    const order = await Order.findOne({ orderCode: orderCode.toUpperCase(), user: userId });
+export const getOrderDetail = async (userId, identifier, userRole = "") => {
+    const isObjectId = mongoose.Types.ObjectId.isValid(identifier);
+    const filter = isObjectId
+        ? { _id: identifier }
+        : { orderCode: String(identifier).toUpperCase() };
+
+    const roleName = typeof userRole === "object" ? userRole?.name : userRole;
+    const isAdminOrStaff = ["admin", "staff"].includes(String(roleName).toLowerCase());
+    if (!isAdminOrStaff) {
+        filter.user = userId;
+    }
+
+    const order = await Order.findOne(filter);
     if (!order) throw new ApiError(404, "Không tìm thấy đơn hàng");
     return order;
 };
@@ -288,6 +335,202 @@ export const cancelOrder = async (userId, orderCode, reason) => {
         updatedBy: userId,
         note: order.cancelReason
     });
+
+    await order.save();
+    return order;
+};
+
+/**
+ * [ADMIN] Lấy tất cả đơn hàng hệ thống với bộ lọc đa dạng (trạng thái, vận chuyển, thanh toán, ngày tháng, khoảng giá, sắp xếp)
+ */
+export const getAllOrdersAdmin = async ({
+    page = 1,
+    limit = 20,
+    status,
+    shippingStatus,
+    paymentStatus,
+    paymentMethod,
+    carrier,
+    province,
+    minAmount,
+    maxAmount,
+    startDate,
+    endDate,
+    search,
+    sortBy = "createdAt_desc"
+} = {}) => {
+    const filter = {};
+
+    // 1. Trạng thái đơn hàng tổng
+    if (status && status !== "ALL") {
+        filter.orderStatus = status;
+    }
+
+    // 2. Trạng thái giao vận
+    if (shippingStatus && shippingStatus !== "ALL") {
+        filter["shippingInfo.status"] = shippingStatus;
+    }
+
+    // 3. Trạng thái thanh toán
+    if (paymentStatus && paymentStatus !== "ALL") {
+        filter["paymentInfo.status"] = paymentStatus;
+    }
+
+    // 4. Phương thức thanh toán
+    if (paymentMethod && paymentMethod !== "ALL") {
+        filter["paymentInfo.method"] = paymentMethod;
+    }
+
+    // 5. Đơn vị vận chuyển
+    if (carrier && carrier !== "ALL") {
+        filter["shippingInfo.carrier"] = carrier;
+    }
+
+    // 6. Khu vực / Tỉnh thành
+    if (province && province.trim()) {
+        filter["shippingAddress.province"] = new RegExp(province.trim(), "i");
+    }
+
+    // 7. Khoảng giá trị đơn hàng
+    if (minAmount !== undefined || maxAmount !== undefined) {
+        filter["financials.finalAmount"] = {};
+        if (minAmount !== undefined && !isNaN(Number(minAmount))) {
+            filter["financials.finalAmount"].$gte = Number(minAmount);
+        }
+        if (maxAmount !== undefined && !isNaN(Number(maxAmount))) {
+            filter["financials.finalAmount"].$lte = Number(maxAmount);
+        }
+    }
+
+    // 8. Khoảng thời gian đặt hàng
+    if (startDate || endDate) {
+        filter.createdAt = {};
+        if (startDate) {
+            filter.createdAt.$gte = new Date(startDate);
+        }
+        if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            filter.createdAt.$lte = end;
+        }
+    }
+
+    // 9. Tìm kiếm tổng hợp (Mã đơn, Tên người nhận, SĐT, Mã vận đơn, Tên sản phẩm)
+    if (search && search.trim()) {
+        const regex = new RegExp(search.trim(), "i");
+        filter.$or = [
+            { orderCode: regex },
+            { "shippingAddress.receiverName": regex },
+            { "shippingAddress.receiverPhone": regex },
+            { "shippingInfo.trackingCode": regex },
+            { "items.name": regex },
+            { "items.sku": regex }
+        ];
+    }
+
+    // 10. Sắp xếp
+    let sortOption = { createdAt: -1 };
+    if (sortBy === "createdAt_asc") sortOption = { createdAt: 1 };
+    else if (sortBy === "amount_desc") sortOption = { "financials.finalAmount": -1 };
+    else if (sortBy === "amount_asc") sortOption = { "financials.finalAmount": 1 };
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const [orders, total, statsAgg] = await Promise.all([
+        Order.find(filter).sort(sortOption).skip(skip).limit(Number(limit)),
+        Order.countDocuments(filter),
+        Order.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalOrders: { $sum: 1 },
+                    totalPending: {
+                        $sum: { $cond: [{ $eq: ["$orderStatus", "PENDING"] }, 1, 0] }
+                    },
+                    totalProcessing: {
+                        $sum: { $cond: [{ $eq: ["$orderStatus", "PROCESSING"] }, 1, 0] }
+                    },
+                    totalShipping: {
+                        $sum: { $cond: [{ $eq: ["$orderStatus", "SHIPPING"] }, 1, 0] }
+                    },
+                    totalDelivered: {
+                        $sum: { $cond: [{ $eq: ["$orderStatus", "DELIVERED"] }, 1, 0] }
+                    },
+                    totalCancelled: {
+                        $sum: { $cond: [{ $eq: ["$orderStatus", "CANCELLED"] }, 1, 0] }
+                    },
+                    totalRevenue: {
+                        $sum: {
+                            $cond: [
+                                { $ne: ["$orderStatus", "CANCELLED"] },
+                                "$financials.finalAmount",
+                                0
+                            ]
+                        }
+                    }
+                }
+            }
+        ])
+    ]);
+
+    const stats = statsAgg[0] || {
+        totalOrders: 0,
+        totalPending: 0,
+        totalProcessing: 0,
+        totalShipping: 0,
+        totalDelivered: 0,
+        totalCancelled: 0,
+        totalRevenue: 0
+    };
+
+    return { orders, total, page: Number(page), limit: Number(limit), stats };
+};
+
+/**
+ * [ADMIN] Cập nhật trạng thái đơn hàng (Duyệt đơn, Đóng gói, Bàn giao bưu tá, Giao thành công, Hủy)
+ */
+export const updateOrderStatusAdmin = async (orderIdentifier, { orderStatus, note, shippingStatus, trackingCode, adminId }) => {
+    const isObjectId = mongoose.Types.ObjectId.isValid(orderIdentifier);
+    const filter = isObjectId
+        ? { _id: orderIdentifier }
+        : { orderCode: String(orderIdentifier).toUpperCase() };
+    const order = await Order.findOne(filter);
+    if (!order) throw new ApiError(404, "Không tìm thấy đơn hàng");
+
+    if (orderStatus) {
+        order.orderStatus = orderStatus;
+        order.timeline.push({
+            type: "ORDER",
+            status: orderStatus,
+            updatedBy: adminId || null,
+            note: note || `Admin cập nhật trạng thái đơn: ${orderStatus}`
+        });
+
+        // Nếu chuyển sang CANCELLED thì hoàn tồn kho
+        if (orderStatus === "CANCELLED") {
+            order.cancelReason = note || "Admin hủy đơn hàng";
+            for (const item of order.items) {
+                await restoreProductStock(item.product, {
+                    variantId: item.variantId,
+                    sizeId: item.sizeId,
+                    color: item.color,
+                    size: item.size,
+                    quantity: item.quantity
+                });
+            }
+        }
+    }
+
+    if (shippingStatus) {
+        order.shippingInfo.status = shippingStatus;
+        if (trackingCode) order.shippingInfo.trackingCode = trackingCode;
+        order.timeline.push({
+            type: "SHIPPING",
+            status: shippingStatus,
+            updatedBy: adminId || null,
+            note: note || `Admin cập nhật vận chuyển: ${shippingStatus}`
+        });
+    }
 
     await order.save();
     return order;

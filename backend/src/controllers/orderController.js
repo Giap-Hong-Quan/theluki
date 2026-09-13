@@ -35,13 +35,15 @@ export const getMyOrdersController = async (req, res, next) => {
 };
 
 /**
- * 3. Lấy chi tiết 1 đơn hàng theo orderCode
+/**
+ * 3. Lấy chi tiết 1 đơn hàng (theo id hoặc orderCode)
  */
 export const getOrderDetailController = async (req, res, next) => {
     try {
         const userId = req.user._id || req.user.id;
-        const { orderCode } = req.params;
-        const order = await orderService.getOrderDetail(userId, orderCode);
+        const userRole = req.user.role?.name || req.user.role || "";
+        const identifier = req.params.orderCode || req.params.id;
+        const order = await orderService.getOrderDetail(userId, identifier, userRole);
         return success(res, order, "Lấy chi tiết đơn hàng thành công", 200);
     } catch (error) {
         next(error);
@@ -71,6 +73,35 @@ export const calculateShippingFeeController = async (req, res, next) => {
         const userId = req.user._id || req.user.id;
         const fees = await orderService.calculateShippingFee(userId, req.body);
         return success(res, fees, "Tính phí vận chuyển thành công", 200);
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * 6. [ADMIN] Lấy danh sách toàn bộ đơn hàng
+ */
+export const getAllOrdersAdminController = async (req, res, next) => {
+    try {
+        const result = await orderService.getAllOrdersAdmin(req.query);
+        return success(res, result, "Lấy danh sách đơn hàng thành công", 200);
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * 7. [ADMIN] Cập nhật trạng thái đơn hàng (Duyệt, Đóng gói, Vận chuyển, Hủy)
+ */
+export const updateOrderStatusAdminController = async (req, res, next) => {
+    try {
+        const { orderCode } = req.params;
+        const adminId = req.user._id || req.user.id;
+        const order = await orderService.updateOrderStatusAdmin(orderCode, {
+            ...req.body,
+            adminId
+        });
+        return success(res, order, "Cập nhật trạng thái đơn hàng thành công", 200);
     } catch (error) {
         next(error);
     }

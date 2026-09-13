@@ -64,14 +64,12 @@ const OrderSchema = new mongoose.Schema(
         items: [OrderItemSchema], // Danh sách sản phẩm đã mua (snapshot, xem giải thích ở trên)
         shippingAddress: {
             receiverName: { type: String, trim: true, required: true },  // Tên người nhận (có thể khác chủ tài khoản)
-            receiverPhone: { type: String, trim: true, required: true }, // SĐT người nhận - ViettelPost dùng để liên hệ khi giao
-            province: { type: String, trim: true, required: true },      // Tên Tỉnh/Thành hiển thị cho khách
-            district: { type: String, trim: true, required: true },      // Tên Quận/Huyện hiển thị cho khách
-            ward: { type: String, trim: true, required: true },          // Tên Phường/Xã hiển thị cho khách
+            receiverPhone: { type: String, trim: true, required: true }, // SĐT người nhận - dùng để liên hệ khi giao
+            province: { type: String, trim: true, required: true },      // Tên Tỉnh/Thành
+            district: { type: String, trim: true, required: true },      // Tên Quận/Huyện
+            ward: { type: String, trim: true, required: true },          // Tên Phường/Xã
             detailAddress: { type: String, trim: true, required: true }, // Số nhà, tên đường
-            provinceId: { type: String, trim: true, default: null }, // Mã Tỉnh chuẩn ViettelPost - BẮT BUỘC khi gọi API tạo đơn
-            wardId: { type: String, trim: true, default: null },     // Mã Xã chuẩn ViettelPost
-            note: { type: String, trim: true, default: null }        // Ghi chú giao hàng của khách (VD: "giao giờ hành chính")
+            note: { type: String, trim: true, default: null }        // Ghi chú giao hàng của khách
         },
 
         // ============ VẬN CHUYỂN (SNAPSHOT RÚT GỌN) ============

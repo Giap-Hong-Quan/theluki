@@ -9,6 +9,7 @@ import NotFoundPage from "../pages/common/NotFoundPage";
 const DashboardPage = lazy(() => import("../pages/admin/DashboardPage"));
 const ReportPage = lazy(() => import("../pages/admin/ReportPage"));
 const OrderPage = lazy(() => import("../pages/admin/OrderPage"));
+const OrderDetailPage = lazy(() => import("../pages/admin/OrderDetailPage"));
 const PosPage = lazy(() => import("../pages/admin/PosPage"));
 const ReturnsPage = lazy(() => import("../pages/admin/ReturnsPage"));
 const CustomerPage = lazy(() => import("../pages/admin/CustomerPage"));
@@ -37,6 +38,7 @@ const router = createBrowserRouter([
           { index: true, element: <DashboardPage /> },
           { path: "reports", element: <ReportPage /> },
           { path: "orders", element: <OrderPage /> },
+          { path: "orders/:id", element: <OrderDetailPage /> },
           { path: "pos", element: <PosPage /> },
           { path: "returns", element: <ReturnsPage /> },
           { path: "customers", element: <CustomerPage /> },
