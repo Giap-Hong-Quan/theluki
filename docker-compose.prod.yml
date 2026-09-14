@@ -5,6 +5,9 @@ services:
     image: ghcr.io/${GH_REPO_OWNER}/backend:latest
     container_name: shop_backend
     restart: always
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       - PORT=8000
       - NODE_ENV=production
@@ -38,6 +41,8 @@ services:
     image: ghcr.io/${GH_REPO_OWNER}/frontend_admin:latest
     container_name: shop_admin
     restart: always
+    environment:
+      - VITE_API_URL=https://api.theluki.click/api
     ports:
       - "127.0.0.1:3001:80"
     depends_on:

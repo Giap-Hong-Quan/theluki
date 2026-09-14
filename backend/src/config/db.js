@@ -1,15 +1,12 @@
 import mongoose from "mongoose";
 
-const connectDB= async ()=>{
+const connectDB = async () => {
     try {
-        const connect =await mongoose.connect(process.env.MONGODBATLAS)
-        if(!connect){
-          console.log("Kết nối thất bại !");
-        }console.log("Kết nối thành công");
-        
+        console.log("Đang kết nối MongoDB Atlas...");
+        const connect = await mongoose.connect(process.env.MONGODBATLAS);
+        console.log("Kết nối MongoDB thành công!");
     } catch (error) {
-        console.log("Lỗi hệ thống kb")
-        process.exit(1);
+        console.error("Lỗi kết nối MongoDB:", error.message || error);
     }
-}
+};
 export default connectDB
