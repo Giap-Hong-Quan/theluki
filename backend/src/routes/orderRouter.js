@@ -6,7 +6,8 @@ import {
     cancelOrderController,
     calculateShippingFeeController,
     getAllOrdersAdminController,
-    updateOrderStatusAdminController
+    updateOrderStatusAdminController,
+    viettelPostWebhookController
 } from "../controllers/orderController.js";
 import { validate } from "../middlewares/validate.js";
 import { verifyToken, authorizeRoles } from "../middlewares/authMiddleware.js";
@@ -14,7 +15,10 @@ import { checkoutZod, cancelOrderZod, getMyOrdersZod } from "../validators/order
 
 const orderRouter = express.Router();
 
-// Tất cả route đơn hàng đều yêu cầu đăng nhập
+// Webhook ViettelPost (Public, không cần JWT token)
+orderRouter.post("/webhooks/viettelpost", viettelPostWebhookController);
+
+// Tất cả route đơn hàng phía dưới đều yêu cầu đăng nhập
 orderRouter.use(verifyToken);
 
 orderRouter.post("/calculate-fee", calculateShippingFeeController);
@@ -108,7 +112,7 @@ orderRouter.get("/my-orders", validate(getMyOrdersZod), getMyOrdersController);
 
 // ================= ROUTE DÀNH CHO ADMIN / STAFF =================
 orderRouter.get("/admin/all", authorizeRoles("admin", "staff"), getAllOrdersAdminController);
-orderRouter.put("/admin/:orderCode/status", authorizeRoles("admin", "staff"), updateOrderStatusAdminController);
+orderRouter.put("/admin/:id/status", authorizeRoles("admin", "staff"), updateOrderStatusAdminController);
 
 /**
  * @swagger

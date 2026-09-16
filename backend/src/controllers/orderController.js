@@ -95,14 +95,33 @@ export const getAllOrdersAdminController = async (req, res, next) => {
  */
 export const updateOrderStatusAdminController = async (req, res, next) => {
     try {
-        const { orderCode } = req.params;
-        const adminId = req.user._id || req.user.id;
-        const order = await orderService.updateOrderStatusAdmin(orderCode, {
-            ...req.body,
-            adminId
-        });
+        const { id } = req.params;
+        const { status } = req.body;
+        const userId = req.user._id;
+        const order = await orderService.updateOrderStatusAdmin(id, status, userId);
         return success(res, order, "Cập nhật trạng thái đơn hàng thành công", 200);
     } catch (error) {
         next(error);
+    }
+};
+
+export const viettelPostWebhookController = async (req, res, next) => {
+    try {
+        console.log("[ViettelPost Webhook] Nhận dữ liệu:", JSON.stringify(req.body));
+        const updatedOrder = await orderService.handleViettelPostWebhook(req.body);
+
+        return res.status(200).json({
+            status: 200,
+            message: "Nhận và xử lý webhook thành công",
+            data: updatedOrder ? { orderCode: updatedOrder.orderCode } : null
+        });
+    } catch (error) {
+        console.error("Lỗi khi xử lý ViettelPost Webhook:", error);
+        // Luôn trả về HTTP 200 kèm error để ViettelPost không retry spam server
+        return res.status(200).json({
+            status: 200,
+            message: "Đã nhận webhook nhưng có lỗi xử lý nội bộ",
+            error: error.message
+        });
     }
 };

@@ -6,11 +6,12 @@ import ApiError from "../exceptions/ApiError.js";
 import { restoreProductStock } from "./productService.js";
 import { validateCoupon, calculateDiscountAmount, applyCouponAtomic } from "./couponService.js";
 import { getIO } from "../config/socket.js";
+import { createOrderVTP } from "./viettelPostService.js";
 // check tỉnh
 export const isSameProvince = (receiverAddress) => {
     if (!receiverAddress) return false;
     // Nhận vào object địa chỉ hoặc chuỗi text
-    const provinceStr =typeof receiverAddress === "object"? receiverAddress.province || "" : String(receiverAddress);
+    const provinceStr = typeof receiverAddress === "object" ? receiverAddress.province || "" : String(receiverAddress);
 
     const clean = provinceStr
         .toLowerCase()
@@ -66,7 +67,7 @@ export const createOrderFromCart = async (userId, payload) => {
         for (const item of selectedItems) {
             const product = await Product.findById(item.product).session(session);
             if (!product || product.isActive === false || product.deletedAt) {
-                throw new ApiError(404,`Sản phẩm '${item.name}' không còn tồn tại hoặc đã ngừng hoạt động`);
+                throw new ApiError(404, `Sản phẩm '${item.name}' không còn tồn tại hoặc đã ngừng hoạt động`);
             }
             let resolvedVariantId = null;
             let resolvedSizeId = null;
@@ -101,7 +102,7 @@ export const createOrderFromCart = async (userId, payload) => {
                 }
                 // Kiểm tra số lượng tồn kho của size
                 if (sizeOpt.stock < item.quantity) {
-                    throw new ApiError(400,`Sản phẩm '${product.name}' (${colorVar.color}/${sizeOpt.size}) không đủ tồn kho (còn ${sizeOpt.stock})`);
+                    throw new ApiError(400, `Sản phẩm '${product.name}' (${colorVar.color}/${sizeOpt.size}) không đủ tồn kho (còn ${sizeOpt.stock})`);
                 }
 
                 // Trừ kho size
@@ -115,7 +116,7 @@ export const createOrderFromCart = async (userId, payload) => {
             } else {
                 // Sản phẩm không phân loại biến thể
                 if (product.stock < item.quantity) {
-                    throw new ApiError(400,`Sản phẩm '${product.name}' không đủ tồn kho (còn ${product.stock})`);
+                    throw new ApiError(400, `Sản phẩm '${product.name}' không đủ tồn kho (còn ${product.stock})`);
                 }
                 product.stock -= item.quantity;
                 resolvedSku = product.sku;
@@ -196,10 +197,10 @@ export const createOrderFromCart = async (userId, payload) => {
                     },
                     coupon: coupon
                         ? {
-                              couponId: coupon._id,
-                              code: coupon.code,
-                              discountAmount
-                          }
+                            couponId: coupon._id,
+                            code: coupon.code,
+                            discountAmount
+                        }
                         : undefined,
                     orderStatus: "PENDING",
                     note: note || "",
@@ -489,26 +490,77 @@ export const getAllOrdersAdmin = async ({
 /**
  * [ADMIN] Cập nhật trạng thái đơn hàng (Duyệt đơn, Đóng gói, Bàn giao bưu tá, Giao thành công, Hủy)
  */
-export const updateOrderStatusAdmin = async (orderIdentifier, { orderStatus, note, shippingStatus, trackingCode, adminId }) => {
-    const isObjectId = mongoose.Types.ObjectId.isValid(orderIdentifier);
-    const filter = isObjectId
-        ? { _id: orderIdentifier }
-        : { orderCode: String(orderIdentifier).toUpperCase() };
-    const order = await Order.findOne(filter);
+export const updateOrderStatusAdmin = async (orderId, status, userId) => {
+    const order = await Order.findById(orderId);
     if (!order) throw new ApiError(404, "Không tìm thấy đơn hàng");
-
-    if (orderStatus) {
-        order.orderStatus = orderStatus;
+    if (status) {
+        order.orderStatus = status;
         order.timeline.push({
             type: "ORDER",
-            status: orderStatus,
-            updatedBy: adminId || null,
-            note: note || `Admin cập nhật trạng thái đơn: ${orderStatus}`
+            status: status,
+            updatedBy: userId || null,
+            note: `Admin cập nhật trạng thái đơn: ${status}`
         });
-
+        if (status === "PROCESSING") {
+            // tạo đơn hàng viettel post
+            const fullAddress = [
+                order.shippingAddress.detailAddress,
+                order.shippingAddress.ward,
+                order.shippingAddress.district,
+                order.shippingAddress.province
+            ].filter(Boolean).join(", ");
+            const totalWeight = order.items.reduce(
+                (sum, item) => sum + (item.weight || 200) * item.quantity,
+                0
+            );
+            const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+            const vtpRes = await createOrderVTP({
+                ORDER_NUMBER: order.orderCode,
+                SENDER_FULLNAME: process.env.SENDER_NAME || "The Luki Shop",
+                SENDER_PHONE: process.env.SENDER_PHONE,
+                SENDER_ADDRESS: process.env.SENDER_ADDRESS,
+                PICKUP_DATE: "",
+                PICKUP_CODE: "",
+                RECEIVER_FULLNAME: order.shippingAddress.receiverName,
+                RECEIVER_ADDRESS: fullAddress,
+                RECEIVER_PHONE: order.shippingAddress.receiverPhone,
+                DELIVERY_CODE: "",
+                PRODUCT_NAME: order.items.map(item => item.name).join(", "),
+                PRODUCT_QUANTITY: totalQuantity,
+                PRODUCT_PRICE: order.financials.finalAmount,
+                PRODUCT_WEIGHT: totalWeight, // gram
+                PRODUCT_LENGTH: 0,
+                PRODUCT_WIDTH: 0,
+                PRODUCT_HEIGHT: 0,
+                ORDER_PAYMENT: 1, // Shop trả phí ship cho ViettelPost
+                ORDER_SERVICE: "VTK", // Tiết kiệm
+                PRODUCT_TYPE: "HH",
+                ORDER_SERVICE_ADD: null,
+                ORDER_NOTE: order.note || "Cho khách xem hàng khi nhận",
+                MONEY_COLLECTION: order.paymentInfo.method === "COD" ? order.financials.finalAmount : 0,
+                EXTRA_MONEY: 0,
+                CHECK_UNIQUE: true,
+                PRODUCT_DETAIL: order.items.map(item => ({
+                    PRODUCT_NAME: item.name,
+                    PRODUCT_QUANTITY: item.quantity,
+                    PRODUCT_PRICE: item.price,
+                    PRODUCT_WEIGHT: (item.weight || 200) * item.quantity
+                })),
+                ENABLE_SORT_CODE: false
+            });
+            // Lưu mã vận đơn ViettelPost cấp vào đơn hàng
+            order.shippingInfo.trackingCode = vtpRes.ORDER_NUMBER;
+            order.shippingInfo.status = "CONFIRMED";
+            order.timeline.push({
+                type: "SHIPPING",
+                status: "CONFIRMED",
+                updatedBy: userId || null,
+                note: `Tạo vận đơn ViettelPost thành công, Mã vận đơn: ${vtpRes.ORDER_NUMBER}`
+            });
+        }
         // Nếu chuyển sang CANCELLED thì hoàn tồn kho
-        if (orderStatus === "CANCELLED") {
-            order.cancelReason = note || "Admin hủy đơn hàng";
+        if (status === "CANCELLED") {
+            order.cancelReason = "Admin hủy đơn hàng";
             for (const item of order.items) {
                 await restoreProductStock(item.product, {
                     variantId: item.variantId,
@@ -521,17 +573,153 @@ export const updateOrderStatusAdmin = async (orderIdentifier, { orderStatus, not
         }
     }
 
-    if (shippingStatus) {
-        order.shippingInfo.status = shippingStatus;
-        if (trackingCode) order.shippingInfo.trackingCode = trackingCode;
-        order.timeline.push({
-            type: "SHIPPING",
-            status: shippingStatus,
-            updatedBy: adminId || null,
-            note: note || `Admin cập nhật vận chuyển: ${shippingStatus}`
-        });
+    await order.save();
+    return order;
+};
+
+/**
+ * [WEBHOOK] Xử lý webhook cập nhật trạng thái đơn vận chuyển từ ViettelPost
+ */
+export const handleViettelPostWebhook = async (payload) => {
+    if (!payload || typeof payload !== "object") {
+        return null;
     }
 
+    // ViettelPost bọc toàn bộ dữ liệu bên trong object "DATA"
+    const data = payload.DATA || payload.data || payload;
+
+    const trackingCode = data.ORDER_NUMBER || data.order_number || data.orderNumber;
+    const orderReference = data.ORDER_REFERENCE || data.order_reference || data.orderReference;
+    const statusCode = Number(data.ORDER_STATUS ?? data.order_status ?? data.orderStatus);
+    const statusName = data.STATUS_NAME || data.status_name || "";
+    const note = data.NOTE || data.note || "";
+    const locName = data.LOC_NAME || data.LOCATION_CURRENTLY || data.loc_name || "";
+
+    if (!trackingCode && !orderReference) {
+        console.warn("[ViettelPost Webhook] Thiếu ORDER_NUMBER và ORDER_REFERENCE trong payload:", payload);
+        return null;
+    }
+
+    // Tìm đơn hàng theo mã vận đơn ViettelPost hoặc mã đơn của shop
+    const filter = {
+        $or: [
+            ...(trackingCode ? [{ "shippingInfo.trackingCode": String(trackingCode).trim() }] : []),
+            ...(orderReference ? [{ orderCode: String(orderReference).trim().toUpperCase() }] : []),
+            ...(trackingCode ? [{ orderCode: String(trackingCode).trim().toUpperCase() }] : [])
+        ]
+    };
+
+    const order = await Order.findOne(filter);
+    if (!order) {
+        console.warn(`[ViettelPost Webhook] Không tìm thấy đơn hàng với mã: ${trackingCode || orderReference}`);
+        return null;
+    }
+
+    let newShippingStatus = order.shippingInfo.status;
+    let newOrderStatus = order.orderStatus;
+    let eventNote = note || statusName || `ViettelPost cập nhật mã: ${statusCode}`;
+    if (locName) {
+        eventNote += ` (Tại: ${locName})`;
+    }
+
+    // Ánh xạ mã số ViettelPost sang trạng thái của hệ thống
+    switch (statusCode) {
+        case 100: // Tiếp nhận đơn hàng
+            newShippingStatus = "CONFIRMED";
+            break;
+
+        case 102: // Đang lấy hàng
+        case 103: // Giao bưu tá đi lấy
+        case 104: // Lấy hàng thành công
+            newShippingStatus = "PICKING";
+            if (order.orderStatus === "PENDING") {
+                newOrderStatus = "PROCESSING";
+            }
+            break;
+
+        case 200: // Nhận tại bưu cục gốc
+        case 300: // Đang luân chuyển
+        case 301:
+        case 302:
+        case 303:
+        case 400: // Đang phát hàng
+        case 401:
+        case 402:
+        case 403:
+            newShippingStatus = "SHIPPING";
+            newOrderStatus = "SHIPPING";
+            break;
+
+        case 501: // GIAO HÀNG THÀNH CÔNG 🎉
+            newShippingStatus = "DELIVERED";
+            newOrderStatus = "DELIVERED";
+
+            // Nếu là đơn COD: tự động xác nhận đã thu tiền
+            if (order.paymentInfo.method === "COD") {
+                order.paymentInfo.status = "PAID";
+                order.paymentInfo.paidAt = new Date();
+                order.timeline.push({
+                    type: "PAYMENT",
+                    status: "PAID",
+                    note: `Thu tiền COD thành công bởi shipper ViettelPost (${order.financials.finalAmount.toLocaleString("vi-VN")} đ)`
+                });
+            }
+            break;
+
+        case 502:
+        case 503:
+        case 504: // Chờ phát lại
+        case 505: // Khách hẹn giao lại
+            newShippingStatus = "FAILED";
+            break;
+
+        case 507: // Chuyển hoàn về shop (khách từ chối nhận / bom hàng)
+        case 508:
+        case 509:
+            newShippingStatus = "RETURNED";
+            newOrderStatus = "RETURNED";
+            break;
+
+        case -100: // Hủy đơn
+        case 107:
+            newShippingStatus = "CANCELLED";
+            newOrderStatus = "CANCELLED";
+            break;
+
+        default:
+            console.log(`[ViettelPost Webhook] Mã trạng thái chưa map cụ thể: ${statusCode}`);
+            break;
+    }
+
+    // Cập nhật trạng thái
+    order.shippingInfo.status = newShippingStatus;
+    order.orderStatus = newOrderStatus;
+
+    // Ghi nhật ký sự kiện vào timeline
+    order.timeline.push({
+        type: "SHIPPING",
+        status: newShippingStatus,
+        note: eventNote
+    });
+
     await order.save();
+
+    // Bắn socket realtime cho client/admin nếu có kết nối
+    try {
+        const io = getIO();
+        if (io) {
+            io.emit("order_status_updated", {
+                orderId: order._id,
+                orderCode: order.orderCode,
+                orderStatus: newOrderStatus,
+                shippingStatus: newShippingStatus,
+                note: eventNote
+            });
+        }
+    } catch {
+        // Socket không khả dụng thì bỏ qua
+    }
+
+    console.log(`[ViettelPost Webhook] Đã cập nhật đơn ${order.orderCode} -> Shipping: ${newShippingStatus}, Order: ${newOrderStatus}`);
     return order;
 };
