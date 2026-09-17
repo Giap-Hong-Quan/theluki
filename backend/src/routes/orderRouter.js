@@ -15,7 +15,38 @@ import { checkoutZod, cancelOrderZod, getMyOrdersZod } from "../validators/order
 
 const orderRouter = express.Router();
 
-// Webhook ViettelPost (Public, không cần JWT token)
+/**
+ * @swagger
+ * /order/webhooks/viettelpost:
+ *   post:
+ *     summary: Webhook nhận cập nhật trạng thái vận chuyển từ ViettelPost (Public)
+ *     tags: [Order]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               DATA:
+ *                 type: object
+ *                 properties:
+ *                   ORDER_NUMBER:
+ *                     type: string
+ *                     example: "123456789VTP"
+ *                   ORDER_STATUS:
+ *                     type: integer
+ *                     example: 501
+ *                   STATUS_NAME:
+ *                     type: string
+ *                     example: "Giao hàng thành công"
+ *                   NOTE:
+ *                     type: string
+ *                     example: "Khách đã nhận hàng"
+ *     responses:
+ *       200:
+ *         description: Nhận và xử lý webhook thành công
+ */
 orderRouter.post("/webhooks/viettelpost", viettelPostWebhookController);
 
 // Tất cả route đơn hàng phía dưới đều yêu cầu đăng nhập
@@ -111,7 +142,76 @@ orderRouter.get("/", validate(getMyOrdersZod), getMyOrdersController);
 orderRouter.get("/my-orders", validate(getMyOrdersZod), getMyOrdersController);
 
 // ================= ROUTE DÀNH CHO ADMIN / STAFF =================
+
+/**
+ * @swagger
+ * /order/admin/all:
+ *   get:
+ *     summary: "[ADMIN] Lấy tất cả đơn hàng hệ thống (phân trang, lọc theo trạng thái)"
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [PENDING, PROCESSING, SHIPPING, DELIVERED, COMPLETED, CANCELLED, RETURNED] }
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách thành công
+ *       401:
+ *         description: Chưa đăng nhập
+ *       403:
+ *         description: Không có quyền admin/staff
+ */
 orderRouter.get("/admin/all", authorizeRoles("admin", "staff"), getAllOrdersAdminController);
+
+/**
+ * @swagger
+ * /order/admin/{id}/status:
+ *   put:
+ *     summary: "[ADMIN] Cập nhật trạng thái đơn hàng (Duyệt PROCESSING -> ViettelPost, Hủy CANCELLED -> Hoàn kho)"
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID đơn hàng MongoDB
+ *         schema:
+ *           type: string
+ *           example: "65f123456789abcdef123456"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, PROCESSING, SHIPPING, DELIVERED, COMPLETED, CANCELLED, RETURNED]
+ *                 example: "PROCESSING"
+ *     responses:
+ *       200:
+ *         description: Cập nhật trạng thái thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       401:
+ *         description: Chưa đăng nhập
+ *       403:
+ *         description: Không có quyền admin/staff
+ *       404:
+ *         description: Không tìm thấy đơn hàng
+ */
 orderRouter.put("/admin/:id/status", authorizeRoles("admin", "staff"), updateOrderStatusAdminController);
 
 /**
