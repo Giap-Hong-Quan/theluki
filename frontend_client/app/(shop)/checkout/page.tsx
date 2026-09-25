@@ -30,15 +30,11 @@ import { useCart } from "@/hooks/useCart";
 import { useCheckout, useCalculateShippingFee } from "@/hooks/useOrder";
 import { UserAddress } from "@/types/authType";
 import CheckoutSkeleton from "@/components/checkout/CheckoutSkeleton";
-import {
-  viettelPostLocationService,
-  ViettelProvince,
-  ViettelDistrict,
-  ViettelWard,
-} from "@/services/viettelPostLocationService";
+import { viettelPostLocationService, ViettelProvince, ViettelDistrict, ViettelWard } from "@/services/viettelPostLocationService";
+import { paymentService } from "@/services/paymentService";
 import toast from "react-hot-toast";
 
-// Cấu hình phương thức thanh toán
+// Cấu hình phương thức thanh toán Online
 const PAYMENT_METHODS = [
   {
     code: "COD",
@@ -46,13 +42,6 @@ const PAYMENT_METHODS = [
     desc: "Bạn chỉ thanh toán bằng tiền mặt khi shipper bàn giao kiện hàng",
     icon: Banknote,
     badge: "Phổ biến",
-  },
-  {
-    code: "SEPAY",
-    name: "Chuyển khoản QR Ngân hàng (VietQR)",
-    desc: "Quét mã QR tự động xác thực trong 3 giây qua SePay Gateway",
-    icon: QrCode,
-    badge: "Tự động 24/7",
   },
   {
     code: "VNPAY",
@@ -64,9 +53,9 @@ const PAYMENT_METHODS = [
   {
     code: "MOMO",
     name: "Ví điện tử MoMo",
-    desc: "Thanh toán nhanh một chạm liên kết ví MoMo",
+    desc: "Thanh toán một chạm qua ví MoMo hoặc thẻ ATM Napas",
     icon: Sparkles,
-    badge: null,
+    badge: "Tiện lợi",
   },
 ];
 
@@ -506,8 +495,31 @@ export default function CheckoutPage() {
         note: shippingNote || undefined,
       },
       {
-        onSuccess: (res: any) => {
-          setCreatedOrder(res?.data);
+        onSuccess: async (res: any) => {
+          const order = res?.data;
+          setCreatedOrder(order);
+
+          if (selectedPayment === "VNPAY" || selectedPayment === "MOMO") {
+            const toastId = toast.loading("Đang chuyển hướng sang cổng thanh toán...");
+            try {
+              const payRes = await paymentService.createPayment({
+                orderCode: order.orderCode,
+                paymentMethod: selectedPayment as any,
+              });
+
+              if (payRes?.data?.paymentUrl) {
+                toast.dismiss(toastId);
+                window.location.href = payRes.data.paymentUrl;
+                return;
+              }
+            } catch (err: any) {
+              toast.dismiss(toastId);
+              toast.error(
+                err?.message || "Không thể tạo liên kết thanh toán, bạn có thể thanh toán lại trong mục Đơn hàng"
+              );
+            }
+          }
+
           setIsSuccessModalOpen(true);
         },
       }

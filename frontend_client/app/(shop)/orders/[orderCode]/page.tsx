@@ -29,6 +29,7 @@ import {
   OrderStatus,
 } from "@/constants/orderStatus";
 import { formatPrice } from "@/utils/formatPrice";
+import { paymentService } from "@/services/paymentService";
 import toast from "react-hot-toast";
 
 const PROGRESS_STEPS: { key: OrderStatus; label: string; desc: string }[] = [
@@ -48,6 +49,11 @@ export default function OrderDetailPage() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("Đổi ý không còn nhu cầu mua nữa");
 
+  // State thanh toán lại
+  const [isPayModalOpen, setIsPayModalOpen] = useState(false);
+  const [selectedPayMethod, setSelectedPayMethod] = useState<"VNPAY" | "MOMO">("VNPAY");
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   const { data: rawData, isLoading, isError, refetch } = useOrderDetail(orderCode);
   const cancelMutation = useCancelOrder();
 
@@ -64,6 +70,28 @@ export default function OrderDetailPage() {
       setCopiedTracking(true);
       toast.success("Đã sao chép mã vận đơn");
       setTimeout(() => setCopiedTracking(false), 2000);
+    }
+  };
+
+  const handleRepay = async () => {
+    if (!order?.orderCode) return;
+    setIsRedirecting(true);
+    const toastId = toast.loading("Đang kết nối cổng thanh toán...");
+    try {
+      const res = await paymentService.createPayment({
+        orderCode: order.orderCode,
+        paymentMethod: selectedPayMethod,
+      });
+      if (res?.data?.paymentUrl) {
+        toast.dismiss(toastId);
+        window.location.href = res.data.paymentUrl;
+        return;
+      }
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error(err?.message || "Không thể khởi tạo thanh toán!");
+    } finally {
+      setIsRedirecting(false);
     }
   };
 
@@ -545,6 +573,17 @@ export default function OrderDetailPage() {
 
             {/* HÀNH ĐỘNG */}
             <div className="space-y-2">
+              {order.paymentInfo?.status === "PENDING" && order.orderStatus !== "CANCELLED" && (
+                <button
+                  type="button"
+                  onClick={() => setIsPayModalOpen(true)}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>THANH TOÁN NGAY ({formatPrice(order.financials?.finalAmount)})</span>
+                </button>
+              )}
+
               {isCancellable && (
                 <button
                   type="button"
@@ -621,6 +660,112 @@ export default function OrderDetailPage() {
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 )}
                 <span>Xác nhận hủy</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CHỌN CỔNG THANH TOÁN LẠI */}
+      {isPayModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white max-w-md w-full p-6 border border-zinc-200 shadow-2xl space-y-4 font-sans text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-emerald-600" />
+                Thanh toán đơn #{order.orderCode}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsPayModalOpen(false)}
+                className="text-zinc-400 hover:text-black cursor-pointer"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-zinc-500 font-medium">
+                Vui lòng chọn cổng thanh toán để hoàn tất số tiền{" "}
+                <strong className="text-zinc-950 font-bold font-mono">
+                  {formatPrice(order.financials?.finalAmount)}
+                </strong>
+                :
+              </p>
+
+              <div className="space-y-2 pt-1 font-mono">
+                <label
+                  onClick={() => setSelectedPayMethod("VNPAY")}
+                  className={`p-3 border flex items-center justify-between cursor-pointer transition-colors ${
+                    selectedPayMethod === "VNPAY"
+                      ? "border-black bg-zinc-50 ring-1 ring-black"
+                      : "border-zinc-200 hover:border-zinc-400 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <input
+                      type="radio"
+                      name="repayMethod"
+                      checked={selectedPayMethod === "VNPAY"}
+                      onChange={() => setSelectedPayMethod("VNPAY")}
+                      className="accent-black"
+                    />
+                    <div>
+                      <strong className="text-xs font-bold text-zinc-900 block font-sans">
+                        Cổng thanh toán VNPAY
+                      </strong>
+                      <span className="text-[11px] text-zinc-500 font-sans">
+                        Thẻ ATM nội địa, QR Pay, Visa/Mastercard
+                      </span>
+                    </div>
+                  </div>
+                </label>
+
+                <label
+                  onClick={() => setSelectedPayMethod("MOMO")}
+                  className={`p-3 border flex items-center justify-between cursor-pointer transition-colors ${
+                    selectedPayMethod === "MOMO"
+                      ? "border-black bg-zinc-50 ring-1 ring-black"
+                      : "border-zinc-200 hover:border-zinc-400 bg-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <input
+                      type="radio"
+                      name="repayMethod"
+                      checked={selectedPayMethod === "MOMO"}
+                      onChange={() => setSelectedPayMethod("MOMO")}
+                      className="accent-black"
+                    />
+                    <div>
+                      <strong className="text-xs font-bold text-zinc-900 block font-sans">
+                        Ví điện tử MoMo
+                      </strong>
+                      <span className="text-[11px] text-zinc-500 font-sans">
+                        Quét mã QR MoMo hoặc thẻ ATM Napas
+                      </span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2.5 pt-3 border-t border-zinc-100">
+              <button
+                type="button"
+                onClick={() => setIsPayModalOpen(false)}
+                className="px-4 py-2 border border-zinc-300 text-xs font-bold uppercase tracking-wider text-zinc-700 hover:border-black transition-colors cursor-pointer"
+              >
+                Đóng
+              </button>
+              <button
+                type="button"
+                disabled={isRedirecting}
+                onClick={handleRepay}
+                className="px-5 py-2 bg-black hover:bg-zinc-800 text-white text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                {isRedirecting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Tiếp tục thanh toán</span>
               </button>
             </div>
           </div>

@@ -21,12 +21,15 @@ import {
   Clock,
   X,
   Tag as TagIcon,
+  Copy,
+  Check,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import { formatPrice } from "../../utils/formatPrice";
 import { useGetAllProducts } from "../../hook/useProduct";
 import { useGetAllCategories } from "../../hook/useCategory";
+import { socket } from "../../config/socket";
 
 // Interface cho mục hàng trong giỏ POS
 interface PosCartItem {
@@ -129,6 +132,30 @@ export default function PosPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Lắng nghe tín hiệu thanh toán SePay realtime từ Socket
+  useEffect(() => {
+    const handlePaymentReceived = (data: any) => {
+      console.log("📢 [POS] Nhận tín hiệu thanh toán SePay:", data);
+      toast.success(
+        `Đã nhận thanh toán chuyển khoản đơn #${data?.orderCode || ""} (${formatPrice(data?.amount || 0)})!`,
+        { icon: "💰", duration: 6000 }
+      );
+    };
+
+    socket.on("payment_received", handlePaymentReceived);
+    return () => {
+      socket.off("payment_received", handlePaymentReceived);
+    };
+  }, []);
+
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const handleCopy = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    toast.success(`Đã sao chép: ${text}`);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   // 4. Modal chọn biến thể Màu / Size khi bấm vào sản phẩm
   const [variantModalProduct, setVariantModalProduct] = useState<any | null>(null);
@@ -785,20 +812,68 @@ export default function PosPage() {
                 </div>
               )}
 
-              {/* Xử lý VIETQR: Hiển thị mã QR động */}
+              {/* Xử lý VIETQR: Hiển thị mã QR SePay chuẩn MBBank */}
               {currentTab.paymentMethod === "BANKING" && (
-                <div className="bg-zinc-50 p-3 border border-zinc-300 text-center space-y-2 font-mono text-xs">
-                  <p className="font-bold text-zinc-800">QUÉT MÃ VIETQR ĐỂ THANH TOÁN</p>
-                  <div className="w-36 h-36 mx-auto bg-white p-2 border border-zinc-300 flex items-center justify-center">
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=247-LUKI-POS-${finalAmount}`}
-                      alt="VietQR Demo"
-                      className="w-full h-full object-contain"
-                    />
+                <div className="bg-zinc-50 p-3 border-2 border-dashed border-zinc-400 space-y-2.5 font-mono text-xs">
+                  <div className="flex items-center justify-between border-b border-zinc-200 pb-1.5">
+                    <span className="font-bold text-zinc-900 flex items-center gap-1.5 uppercase">
+                      <QrCode className="w-4 h-4 text-emerald-600" />
+                      <span>VietQR Chuyển Khoản 24/7</span>
+                    </span>
+                    <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                      Tự động SePay
+                    </span>
                   </div>
-                  <p className="text-[11px] text-zinc-500">
-                    Số tiền: <strong>{formatPrice(finalAmount)}</strong> · Nội dung:{" "}
-                    <strong>POS-{currentTab.tabName}</strong>
+
+                  <div className="flex items-center gap-3">
+                    <div className="w-28 h-28 bg-white p-1 border border-zinc-300 shrink-0 flex items-center justify-center shadow-xs">
+                      <img
+                        src={`https://qr.sepay.vn/img?acc=0335906807&bank=MB&amount=${finalAmount}&des=LUKI+POS+${currentTab.tabName.replace(/\s+/g, '')}&template=compact`}
+                        alt="SePay VietQR"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+
+                    <div className="space-y-1 text-[11px] text-zinc-600 flex-1">
+                      <div>
+                        <span className="text-zinc-400 text-[10px] block">Ngân hàng:</span>
+                        <strong className="text-zinc-900 font-bold">MBBank (Quân Đội)</strong>
+                      </div>
+
+                      <div>
+                        <span className="text-zinc-400 text-[10px] block">Số tài khoản:</span>
+                        <div className="flex items-center gap-1">
+                          <strong className="text-zinc-900 font-bold">0335906807</strong>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy("0335906807", "stk")}
+                            className="p-0.5 text-zinc-400 hover:text-black cursor-pointer"
+                            title="Sao chép STK"
+                          >
+                            {copiedField === "stk" ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-zinc-400 text-[10px] block">Nội dung:</span>
+                        <div className="flex items-center gap-1">
+                          <strong className="text-emerald-700 font-bold">LUKI POS {currentTab.tabName.replace(/\s+/g, '')}</strong>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(`LUKI POS ${currentTab.tabName.replace(/\s+/g, '')}`, "content")}
+                            className="p-0.5 text-zinc-400 hover:text-black cursor-pointer"
+                            title="Sao chép nội dung"
+                          >
+                            {copiedField === "content" ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-zinc-400 text-center pt-1 border-t border-zinc-200">
+                    Hệ thống sẽ tự động cập nhật khi tiền vào tài khoản MBBank
                   </p>
                 </div>
               )}

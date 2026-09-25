@@ -8,6 +8,7 @@ import cartRouter from "./cartRouter.js";
 import orderRouter from "./orderRouter.js";
 import bannerRouter from "./bannerRouter.js";
 import wishlistRouter from "./wishlistRouter.js";
+import paymentRouter from "./paymentRouter.js";
 
 const router = express.Router();
 router.use("/auth", authRouter);
@@ -19,5 +20,6 @@ router.use("/cart", cartRouter);
 router.use("/order", orderRouter);
 router.use("/banner", bannerRouter);
 router.use("/wishlist", wishlistRouter);
+router.use("/payment", paymentRouter);
 
 export default router;
