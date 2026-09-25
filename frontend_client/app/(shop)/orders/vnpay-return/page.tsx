@@ -23,7 +23,8 @@ function VnpayReturnContent() {
 
   useEffect(() => {
     const responseCode = searchParams.get("vnp_ResponseCode") || "";
-    const orderCode = searchParams.get("vnp_TxnRef") || "";
+    const rawTxnRef = searchParams.get("vnp_TxnRef") || "";
+    const orderCode = rawTxnRef.includes("_") ? rawTxnRef.split("_")[0] : rawTxnRef;
     const rawAmount = searchParams.get("vnp_Amount") || "0";
     const transactionNo = searchParams.get("vnp_TransactionNo") || "";
     const bankCode = searchParams.get("vnp_BankCode") || "";

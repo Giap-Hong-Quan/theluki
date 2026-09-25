@@ -79,13 +79,17 @@ export const createVnpayPaymentUrl = ({
     // VNPAY yêu cầu số tiền nhân 100 (đơn vị: đồng -> cents)
     const vnpAmount = Math.round(Number(amount) * 100);
 
+    // VNPAY bắt buộc vnp_TxnRef phải là duy nhất cho mỗi yêu cầu thanh toán trong ngày
+    // Tránh lỗi "Giao dịch đang được xử lý hoặc đã quá thời gian thanh toán" khi thanh toán lại
+    const txnRef = `${orderCode}_${Date.now()}`;
+
     let vnp_Params = {
         vnp_Version: "2.1.0",
         vnp_Command: "pay",
         vnp_TmnCode: tmnCode,
         vnp_Locale: locale,
         vnp_CurrCode: "VND",
-        vnp_TxnRef: orderCode,
+        vnp_TxnRef: txnRef,
         vnp_OrderInfo: orderInfo || `Thanh toan don hang ${orderCode}`,
         vnp_OrderType: "other",
         vnp_Amount: vnpAmount,
@@ -140,12 +144,16 @@ export const verifyVnpaySignature = (vnpParams) => {
     const isValid = secureHash === checkHash;
     const isSuccess = isValid && vnpParams["vnp_ResponseCode"] === "00" && vnpParams["vnp_TransactionStatus"] === "00";
 
+    const rawTxnRef = vnpParams["vnp_TxnRef"] || "";
+    const extractedOrderCode = rawTxnRef.includes("_") ? rawTxnRef.split("_")[0] : rawTxnRef;
+
     return {
         isValid,
         isSuccess,
         responseCode: vnpParams["vnp_ResponseCode"],
         transactionStatus: vnpParams["vnp_TransactionStatus"],
-        orderCode: vnpParams["vnp_TxnRef"],
+        orderCode: extractedOrderCode,
+        txnRef: rawTxnRef,
         transactionNo: vnpParams["vnp_TransactionNo"],
         bankCode: vnpParams["vnp_BankCode"],
         bankTranNo: vnpParams["vnp_BankTranNo"],
