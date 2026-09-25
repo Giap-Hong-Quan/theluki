@@ -1,6 +1,11 @@
 import crypto from "crypto";
 import qs from "qs";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 /**
  * Hàm sắp xếp object theo thứ tự bảng chữ cái A-Z của key
@@ -67,8 +72,9 @@ export const createVnpayPaymentUrl = ({
         throw new Error("Thiếu cấu hình VNPAY trong file .env (VNPAY_TMN_CODE, VNPAY_HASH_SECRET, VNPAY_URL)");
     }
 
-    const createDate = dayjs().format("YYYYMMDDHHmmss");
-    const expireDate = dayjs().add(15, "minute").format("YYYYMMDDHHmmss"); // Hết hạn sau 15 phút
+    const nowVn = dayjs().tz("Asia/Ho_Chi_Minh");
+    const createDate = nowVn.format("YYYYMMDDHHmmss");
+    const expireDate = nowVn.add(15, "minute").format("YYYYMMDDHHmmss"); // Hết hạn sau 15 phút
 
     // VNPAY yêu cầu số tiền nhân 100 (đơn vị: đồng -> cents)
     const vnpAmount = Math.round(Number(amount) * 100);

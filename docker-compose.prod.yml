@@ -11,6 +11,7 @@ services:
     environment:
       - PORT=8000
       - NODE_ENV=production
+      - TZ=Asia/Ho_Chi_Minh
       - MONGODBATLAS=${MONGODBATLAS}
       - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
