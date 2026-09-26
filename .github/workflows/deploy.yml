@@ -161,6 +161,9 @@ jobs:
             export SEPAY_ACCOUNT_NAME="${{ secrets.SEPAY_ACCOUNT_NAME }}"
             export SEPAY_API_KEY="${{ secrets.SEPAY_API_KEY }}"
             export SEPAY_WEBHOOK_URL="${{ secrets.SEPAY_WEBHOOK_URL }}"
+            # TELEGRAM CRONJOB
+            export TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}"
+            export TELEGRAM_CHAT_ID="${{ secrets.TELEGRAM_CHAT_ID }}"
 
             # Đăng nhập GHCR trên VPS
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin

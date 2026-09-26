@@ -6,11 +6,12 @@ import ApiError from "../exceptions/ApiError.js";
 import { restoreProductStock } from "./productService.js";
 import { validateCoupon, calculateDiscountAmount, applyCouponAtomic } from "./couponService.js";
 import { getIO } from "../config/socket.js";
-import { createOrderVTP } from "./viettelPostService.js";
-// check tỉnh
+import { createOrderVTP, getCheapestShippingService, getShippingServices } from "./viettelPostService.js";
+import { notifyNewOrder, notifyOrderCancelled } from "./telegramService.js";
+
+// check cùng tỉnh Bình Định (nơi đặt kho chính)
 export const isSameProvince = (receiverAddress) => {
     if (!receiverAddress) return false;
-    // Nhận vào object địa chỉ hoặc chuỗi text
     const provinceStr = typeof receiverAddress === "object" ? receiverAddress.province || "" : String(receiverAddress);
 
     const clean = provinceStr
@@ -24,21 +25,35 @@ export const isSameProvince = (receiverAddress) => {
     return clean.includes("binh dinh");
 };
 
-
-// tính cước vận chuyển đơn giản
-export const calculateFee = async ({ receiverAddress, productPrice = 0 }) => {
-    const isSame = isSameProvince(receiverAddress);
+/**
+ * Tính cước vận chuyển ViettelPost: Tự động quét và chọn gói cước có PHÍ RẺ NHẤT
+ * Áp dụng chính sách miễn phí ship (FREE_SHIPPING_THRESHOLD) nếu đơn hàng đạt giá trị
+ */
+export const calculateFee = async ({ receiverAddress, productPrice = 0, weight = 500, codAmount = 0 }) => {
     const price = Number(productPrice) || 0;
-
-    let fee = isSame ? 20000 : 30000;
     const freeThreshold = Number(process.env.FREE_SHIPPING_THRESHOLD) || 300000;
-    if (price >= freeThreshold) {
-        fee = 0;
-    }
+    const isFreeShipping = price >= freeThreshold;
+
+    // Gọi API ViettelPost lấy gói cước rẻ nhất
+    const cheapestOption = await getCheapestShippingService({
+        receiverAddress,
+        weight,
+        price,
+        codAmount
+    });
+
+    const finalFee = isFreeShipping ? 0 : cheapestOption.fee;
+
     return [
         {
-            fee,
-            isSameProvince: isSame
+            serviceCode: cheapestOption.serviceCode,
+            serviceName: cheapestOption.serviceName,
+            fee: finalFee,
+            originalFee: cheapestOption.fee,
+            isFreeShipping,
+            expectedDelivery: cheapestOption.expectedDelivery,
+            isFallback: cheapestOption.isFallback,
+            allServices: cheapestOption.allServices
         }
     ];
 };
@@ -141,14 +156,20 @@ export const createOrderFromCart = async (userId, payload) => {
             });
         }
         const itemsSubtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        // Tính phí ship theo chính sách của Shop (20k nội tỉnh, 30k ngoại tỉnh, đơn >= 300k Free ship)
+        const orderTotalWeight = orderItems.reduce((sum, item) => sum + (item.weight || 200) * item.quantity, 0);
+
+        // Tự động tìm gói cước ViettelPost RẺ NHẤT cho đơn hàng
         const shippingFeeResults = await calculateFee({
             receiverAddress: shippingAddress,
-            productPrice: itemsSubtotal
+            productPrice: itemsSubtotal,
+            weight: orderTotalWeight || 500,
+            codAmount: paymentMethod === "COD" ? itemsSubtotal : 0
         });
 
         const selectedOption = shippingFeeResults?.[0];
         const finalShippingFee = typeof selectedOption?.fee === "number" ? selectedOption.fee : 30000;
+        const selectedServiceCode = selectedOption?.serviceCode || "VTK";
+        const selectedServiceName = selectedOption?.serviceName || "Chuyển phát tiết kiệm";
 
         // Áp dụng mã giảm giá Coupon nếu có
         let coupon = null;
@@ -178,6 +199,8 @@ export const createOrderFromCart = async (userId, payload) => {
                     },
                     shippingInfo: {
                         carrier: "VIETTELPOST",
+                        serviceCode: selectedServiceCode,
+                        serviceName: selectedServiceName,
                         shippingFee: finalShippingFee,
                         codAmount: paymentMethod === "COD" ? finalAmount : 0
                     },
@@ -234,6 +257,9 @@ export const createOrderFromCart = async (userId, payload) => {
             console.error("Lỗi phát socket new_order:", socketError.message);
         }
 
+        // Bắn thông báo đơn hàng mới về nhóm Telegram
+        notifyNewOrder(newOrder);
+
         return newOrder;
     } catch (error) {
         await session.abortTransaction();
@@ -246,12 +272,13 @@ export const createOrderFromCart = async (userId, payload) => {
  * Tính trước phí ship cho giỏ hàng hiện tại với địa chỉ nhận hàng cụ thể
  */
 export const calculateShippingFee = async (userId, payload) => {
-    const { shippingAddress, productPrice } = payload;
+    const { shippingAddress, productPrice, weight, codAmount = 0 } = payload;
     if (!shippingAddress) {
         throw new ApiError(400, "Địa chỉ nhận hàng là bắt buộc");
     }
 
     let itemsSubtotal = typeof productPrice === "number" ? Number(productPrice) : null;
+    let computedWeight = typeof weight === "number" ? Number(weight) : 0;
 
     if (itemsSubtotal === null) {
         const cart = await Cart.findOne({ user: userId });
@@ -259,12 +286,15 @@ export const calculateShippingFee = async (userId, payload) => {
         itemsSubtotal = 0;
         for (const item of selectedItems) {
             itemsSubtotal += item.price * item.quantity;
+            computedWeight += (item.weight || 200) * item.quantity;
         }
     }
 
     const fees = await calculateFee({
         receiverAddress: shippingAddress,
-        productPrice: itemsSubtotal
+        productPrice: itemsSubtotal,
+        weight: computedWeight || 500,
+        codAmount
     });
 
     return fees;
@@ -338,6 +368,10 @@ export const cancelOrder = async (userId, orderCode, reason) => {
     });
 
     await order.save();
+
+    // Bắn thông báo đơn bị hủy về Telegram
+    notifyOrderCancelled(order, order.cancelReason);
+
     return order;
 };
 
@@ -533,7 +567,7 @@ export const updateOrderStatusAdmin = async (orderId, status, userId) => {
                 PRODUCT_WIDTH: 0,
                 PRODUCT_HEIGHT: 0,
                 ORDER_PAYMENT: 1, // Shop trả phí ship cho ViettelPost
-                ORDER_SERVICE: "VTK", // Tiết kiệm
+                ORDER_SERVICE: order.shippingInfo?.serviceCode || "VTK", // Sử dụng đúng gói cước rẻ nhất đã tính toán lúc đặt hàng
                 PRODUCT_TYPE: "HH",
                 ORDER_SERVICE_ADD: null,
                 ORDER_NOTE: order.note || "Cho khách xem hàng khi nhận",
@@ -574,6 +608,11 @@ export const updateOrderStatusAdmin = async (orderId, status, userId) => {
     }
 
     await order.save();
+
+    if (status === "CANCELLED") {
+        notifyOrderCancelled(order, order.cancelReason);
+    }
+
     return order;
 };
 

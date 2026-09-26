@@ -11,6 +11,7 @@ import { seedData } from "./config/seeData.js";
 import { swaggerDocs } from './config/swagger.js';
 import { errorHandle } from './middlewares/errorMiddleware.js';
 import { initSocket } from './config/socket.js';
+import { initDailyCron } from './services/cronjobService.js';
 
 const app = express();
 app.use(cors({
@@ -43,6 +44,7 @@ app.use('/api',router);
 app.use(errorHandle);
 const server = http.createServer(app);
 initSocket(server);
+initDailyCron();
 const port = process.env.PORT || 8000;
 server.listen(port,()=>{
     console.log(`Server & Socket running with port ${port}`.green);

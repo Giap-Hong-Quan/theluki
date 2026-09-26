@@ -82,6 +82,8 @@ const OrderSchema = new mongoose.Schema(
                 enum: ["VIETTELPOST", "GHN", "GHTK", "INTERNAL"],
                 default: "VIETTELPOST"
             },
+            serviceCode: { type: String, trim: true, default: "VTK" }, // Mã gói cước ViettelPost (VD: VTK, VCN, BCN...)
+            serviceName: { type: String, trim: true, default: null },  // Tên gói cước hiển thị
             trackingCode: { type: String, trim: true, default: null, index: true }, // Mã vận đơn hiện tại (lần giao gần nhất)
             status: { // Trạng thái vận chuyển hiện tại (đồng bộ ngược từ Shipment.status)
                 type: String,
