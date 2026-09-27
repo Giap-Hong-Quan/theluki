@@ -67,8 +67,8 @@ export const generateDailyReport = async () => {
     return stats;
 }
 export const initDailyCron = () => {
-    // Chạy tổng kết vào 22:00 (10h tối) hàng ngày theo giờ Việt Nam
-    const cronTime = "20 23 * * *"; 
+    // Test tổng kết vào 08:10 sáng theo giờ Việt Nam
+    const cronTime = "10 8 * * *"; 
     const job = cron.schedule(cronTime, async () => {
         try {
             console.log("⏰ [Cronjob] Đang tiến hành tổng kết đơn hàng cuối ngày...");
